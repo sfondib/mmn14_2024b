@@ -15,6 +15,9 @@ TO-DO:
 - consider putting getLine() and patternStartIndex() in a
 	different	file and then include it(maybe will be used by
 	other files too)
+- check if it's ok for macro definitions to have leading and / or
+	trailing spaces / tabs
+- split main into more functions for organization
 
 */
 
@@ -24,8 +27,10 @@ TO-DO:
 #include<stdlib.h>
 
 /* Definitions */
-#define NUM_INVALID_MACRO_NAMES 20
-#define MAX_LINE_LEN 80
+#define NUM_INVALID_MACRO_NAMES	20
+#define MAX_LINE_LEN			80
+#define MACRO_START				"macr"
+#define MACRO_END				"endmacr"
 #pragma GCC diagnostic ignored "-Wunused-variable"
 #pragma GCC diagnostic ignored "-Wunused-value"
 
@@ -33,6 +38,14 @@ TO-DO:
 int checkValidMacroName(char *);
 int getLine(char *);
 int patternStartIndex(char *, char *);
+
+/* Struct to hold data for a single macro */
+typedef struct macro_data {
+	char *macro_lines[1]; /* Maybe use malloc / realloc since number of lines for macro is unknown, another option is
+	doing (macro_end_line_num - macro_start_line_num) to find how many lines while creating the struct */
+	int macro_lims[2]; /* [0] = start-line, [1] = end-line */
+	char *macro_name;
+};
 
 /* Macro names must not be names of operations or instructions */
 char *invalid_macro_names[] = {
@@ -64,15 +77,17 @@ int error_found = 0; /* ??? Maybe make local to calling function ???*/
 The function receives .as files with assembly instructions and
 replaces all macro calls with the matching definitions
 
-@param1
-@param2
-@param3
-
-@return
+@param1 argc Number of arguments (source files) passed
+@param2 *argv[] List of pointers to strings (Names of sources files passed)
+@return 0 if completed successfully, != 0 otherwise
 */
 int main(int argc, char *argv[]) {
 	FILE *fp;
-	int i = 1;
+	int file_index = 1; /* When passed as arguments, files start from 1 in argv */
+	int pattern_index;
+	int current_line; /* Keep track of lines for macros / errors */
+	int macro_start_line_num;
+	int macro_end_line_num;
 	
 	if(argc < 2) {
 		fprintf(stderr, "No files passed as arguments\n");
@@ -80,13 +95,32 @@ int main(int argc, char *argv[]) {
 	}
 	
 	/* Loop through all files */
-	while(i < argc) {
+	while(file_index < argc) {
 		/* Attempt to open a file with the .as file extension */
-		if(!(fp = fopen(strcat(argv[i], ".as"), "r"))) {
-			fprintf(stderr, "Unable to open file %s\n", argv[i++]);
+		if(!(fp = fopen(strcat(argv[file_index], ".as"), "r"))) {
+			fprintf(stderr, "Unable to open file %s\n", argv[file_index++]);
 			continue;
 		}
-		/* CONTINUE FROM HERE */
+		
+		current_line = 0;
+		while(fgets(line, MAX_LINE_LEN, fp)) {
+			current_line++;
+			if((pattern_index = patternStartIndex(line, MACRO_START)) != -1) {
+				if(pattern_index) {
+					fprintf(stderr, "File %s, line %d, macro definition has leading spaces and / or tabs\nMoving to \
+						next source file", argv[file_index], current_line);
+					break;
+				} else {
+					macro_start_line_num = current_line;
+					/* "macr" found at the start of a line */
+					/* start checking from index (pattern_index + 4) or (pattern_index + strlen(MACRO_START)) to check
+					what's after the "macr" keyword (skip whitespaces and check the text, compare it to valid names
+					using the checkValidMacroName() function)*/
+				}
+			}
+		}
+
+		fclose(fp);	
 	}
 
 	return 0;
@@ -109,6 +143,7 @@ int checkValidMacroName(char *macro_name) {
 }
 
 /*
+MAYBE DELETE BECAUSE fgets CAN READ THE LINE INTO AN ARRAY ANYWAY
 Read every character from the passed string into an array (buffer)
 
 @param *string String to read characters from
