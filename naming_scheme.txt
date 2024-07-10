@@ -1,0 +1,20 @@
+משתנים:
+אינדקסים:
+i,j,k...
+ראשי תיבות:
+fp = file pointer
+cnt = count
+len = length
+...
+כמה מילים בשם:
+invalid_macro_names
+מופרדים בקו-תחתון
+
+
+פונקציות:
+checkValidMacroName
+camel-case
+
+
+מאקרואים והגדרות:
+הכל אותיות גדולות
