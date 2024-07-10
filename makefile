@@ -4,7 +4,7 @@ CFLAGS = -ansi -Wall -pedantic
 
 /* Main: */
 assembler.o: assembler.c
-	$(CC) -c assembler.c &(CFLAGS) -o assembler
+	$(CC) -c assembler.c $(CFLAGS) -o assembler
 
 /* Code Helper Functions: */  #########for example#########
 code_helper.o: code_helper.c code_helper.h
