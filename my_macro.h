@@ -1,6 +1,10 @@
 /* Maximum length of a single source line  */
 #define MAX_LINE_LEN 80
 
+/* Sign for macro start and end points */
+#define MACRO_START			        "macr"
+#define MACRO_END				"endmacr"
+
 /* Initial IC value */
 #define IC_INIT_VALUE 100
 
