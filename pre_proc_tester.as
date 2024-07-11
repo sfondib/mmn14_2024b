@@ -7,4 +7,4 @@ macr          hello
 
 
 
-macr
+macr    abc
