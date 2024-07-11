@@ -13,7 +13,7 @@ TO-DO:
 		0, if not then there are characters before it (error)
 - check about upper-case and lower-case
 - consider putting getLine() and patternStartIndex() in a
-	different	file and then include it(maybe will be used by
+	different file and then include it(maybe will be used by
 	other files too)
 - check if it's ok for macro definitions to have leading and / or
 	trailing spaces / tabs
@@ -25,14 +25,12 @@ TO-DO:
 #include<stdio.h>
 #include<string.h>
 #include<stdlib.h>
+#include "my_macro.h"
 
 /* Definitions */
-#define NUM_INVALID_MACRO_NAMES	20
-#define MAX_LINE_LEN			80
-#define MACRO_START				"macr"
-#define MACRO_END				"endmacr"
 #pragma GCC diagnostic ignored "-Wunused-variable"
 #pragma GCC diagnostic ignored "-Wunused-value"
+#pragma GCC diagnostic ignored "-Wunused-but-set-variable"
 
 /* Prototypes */
 int checkValidMacroName(char *);
@@ -45,7 +43,7 @@ typedef struct macro_data {
 	doing (macro_end_line_num - macro_start_line_num) to find how many lines while creating the struct */
 	int macro_lims[2]; /* [0] = start-line, [1] = end-line */
 	char *macro_name;
-};
+} macro_data_d;
 
 /* Macro names must not be names of operations or instructions */
 char *invalid_macro_names[] = {
@@ -88,6 +86,7 @@ int main(int argc, char *argv[]) {
 	int current_line; /* Keep track of lines for macros / errors */
 	int macro_start_line_num;
 	int macro_end_line_num;
+	char *macro_name;
 	
 	if(argc < 2) {
 		fprintf(stderr, "No files passed as arguments\n");
@@ -107,11 +106,19 @@ int main(int argc, char *argv[]) {
 			current_line++;
 			if((pattern_index = patternStartIndex(line, MACRO_START)) != -1) {
 				if(pattern_index) {
-					fprintf(stderr, "File %s, line %d, macro definition has leading spaces and / or tabs\nMoving to \
-						next source file", argv[file_index], current_line);
-					break;
+					fprintf(stderr, "ERROR: File (%s) > Line (%d)\n\tMacro definition has leading characters\n", argv[file_index], current_line);
+					continue;
 				} else {
+					/* Macro definition found, skip keyword and whitespace characters */
 					macro_start_line_num = current_line;
+					pattern_index += strlen(MACRO_START);
+					MOVE_TO_NOT_WHITE(line, pattern_index);
+					printf("Pattern index is (%d)\n", pattern_index);
+					printf("Macro found on line (%d)\n", macro_start_line_num);
+
+					/* get what's after the whitespaces using getLine(), that would be the name of the macro
+					if what was read has a whitespace and then more characters then macro definition is invalid */
+
 					/* "macr" found at the start of a line */
 					/* start checking from index (pattern_index + 4) or (pattern_index + strlen(MACRO_START)) to check
 					what's after the "macr" keyword (skip whitespaces and check the text, compare it to valid names
@@ -120,7 +127,8 @@ int main(int argc, char *argv[]) {
 			}
 		}
 
-		fclose(fp);	
+		file_index++;
+		fclose(fp);
 	}
 
 	return 0;
@@ -155,7 +163,7 @@ int getLine(char *string) {
 	/* Read until newline reached */
 	while((i < MAX_LINE_LEN) && ((c = getchar()) != EOF) && (c != '\n'))
 		string[i++];
-	/* Insert \\n and \\0 to the buffer */
+	/* Insert \n and \0 to the buffer */
 	if(c == '\n')
 		string[i++] = '\n';
 	string[i] = '\0';
