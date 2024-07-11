@@ -1,7 +1,8 @@
 /* Maximum length of a single source line  */
 #define MAX_LINE_LEN 80
 
-/* Sign for macro start and end points */
+/* Macro rules */
+#define NUM_INVALID_MACRO_NAMES	20
 #define MACRO_START			        "macr"
 #define MACRO_END				"endmacr"
 
