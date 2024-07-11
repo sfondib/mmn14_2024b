@@ -1,5 +1,5 @@
 /* Maximum length of a single source line  */
-#define MAX_LINE_LENGTH 80
+#define MAX_LINE_LEN 80
 
 /* Initial IC value */
 #define IC_INIT_VALUE 100
