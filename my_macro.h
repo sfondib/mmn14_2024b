@@ -9,9 +9,10 @@
 /* Initial IC value */
 #define IC_INIT_VALUE 100
 
-/* Boolean (t/f) helpers */
-#define FALSE = 0
-#define TRUE = 1
+/* Boolean helpers - bool */
+typedef enum booleans {
+	FALSE = 0, TRUE = 1
+} bool;
 
 /**
 * For both runs
