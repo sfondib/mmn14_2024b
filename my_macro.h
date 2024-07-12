@@ -12,6 +12,9 @@
 /* Initial IC value */
 #define IC_START_VALUE 100
 
+/* zeroize variable */
+#define ZEROIZE 100
+
 /* Boolean helpers - bool */
 typedef enum booleans {
 	FALSE = 0, TRUE = 1
