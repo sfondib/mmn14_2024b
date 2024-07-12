@@ -40,7 +40,11 @@ static bool processes(char *file) {
 		return FALSE;
 	}
   
-	/* start first run: */
+/**
+* =========================================================================================================
+* ============================================= START FIRST RUN ===========================================
+* =========================================================================================================
+*/
 	/* Read line - stop if read failed (when NULL returned) */
 	for (curr_line_info.line_number = 1; fgets(temp_line, MAX_LINE_LENGTH, file_des) != NULL; curr_line_info.line_number++) {
 		/* if line is too long, the buffer doesn't include char '\n' or file isn't yet on EOF. */
