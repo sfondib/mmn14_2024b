@@ -3,8 +3,8 @@ TO-DO:
 
 [X] check if there are more invalid macro names that need to be
 	added to the list
-[X] make hash-table for macro names and their content (or array of
-	type struct with name field and contents field)
+[X] make hash-table for macro names and their content (OR array of
+	type struct with name field and contents field OR linked-list)
 [V] after reading line, check if the pattern searched for ("macr")
 	exists in it, if so then save the line number and raise flag
 	for detecting we are inside a macro (use later for finding
@@ -35,6 +35,8 @@ TO-DO:
 /* Prototypes */
 int checkValidMacroName(char *);
 int patternStartIndex(char *, char *);
+void checkAlloc(void *);
+void getMacroNameFromLine(char *, int *, char **);
 
 /* Struct to hold data for a single macro */
 typedef struct macro_data {
@@ -85,7 +87,7 @@ int main(int argc, char *argv[]) {
 	int current_line; /* Keep track of lines for macros / errors */
 	int macro_start_line_num;
 	int macro_end_line_num;
-	char *macro_name = NULL;
+	char *macro_name;
 	
 	if(argc < 2) {
 		fprintf(stderr, "ERROR: No files passed as arguments\n");
@@ -103,14 +105,18 @@ int main(int argc, char *argv[]) {
 			continue;
 		}
 		
-		current_line = 1;
+		current_line = 0;
 		while(fgets(line, MAX_LINE_LEN, fp)) {
+			
+			current_line++;
 
-			if(!(macro_name = (char *)malloc(sizeof(char)))) {
-				fprintf(stderr, "ERROR: Memory allocation failed\n");
-				exit(1);
-			}
-			macro_name[0] = '\0';
+			/* Make sure not pointing to same place in memory and free it */
+			macro_name = NULL; /* Overcome null terminator in previous iterations */
+			free(macro_name);
+
+			macro_name = (char *)malloc(sizeof(char));
+			checkAlloc(macro_name);
+			/* macro_name[0] = '\0'; */
 			
 			if((pattern_index = patternStartIndex(line, MACRO_START)) != -1) {
 				if(pattern_index) {
@@ -124,34 +130,32 @@ int main(int argc, char *argv[]) {
 
 					/* Read the name until a whitespace or end of line reached */
 					while(line[pattern_index] != ' ' && line[pattern_index] != '\n', line[pattern_index] != '\t' && line[pattern_index] != '\0') {
-						/* printf("LENGTH OF MACRO_NAME IS (%ld)\n", strlen(macro_name)); */
 						macro_name[strlen(macro_name)] = line[pattern_index++];
 						macro_name = (char *)realloc(macro_name, strlen(macro_name) + 1); /* Make sure there is enough space for the macro_name */
+						checkAlloc(macro_name);
 					}
+
+					/* Last line with text in the file might not have a newline (blank line after it)*/
+					/* Replace \n with \0 at the end */
+					if(macro_name[strlen(macro_name) - 1] == '\n') 
+						macro_name[strlen(macro_name) - 1] = '\0';
+					else
+						macro_name[strlen(macro_name)] = '\0';
 
 					/* If length of macro name is 0 then no name was passed */
 					if(!strlen(macro_name)) {
 						fprintf(stderr, "ERROR: File (%s) > Line (%d)\n\tMissing name for macro definition\n", argv[file_index], current_line);
 						continue; /* continue instead of break so all errors are printed */
 					}
-
-					/* Last line with text in the file might not have a newline (blank line after it)*/
-					if(macro_name[strlen(macro_name) - 1] == '\n') 
-						macro_name[strlen(macro_name) - 1] = '\0'; /* Replace \n with \0 at the end */
-					else
-						macro_name[strlen(macro_name)] = '\0'; /* Replace \n with \0 at the end */
 					
-					printf("macro_name: %s\n", macro_name);
 					/* Validate macro name */
 					if(checkValidMacroName(macro_name)) {
 						fprintf(stderr, "ERROR: File (%s) > Line (%d)\n\tInvalid macro name in macro definition\n\t(%s) is a reserved keyword\n", argv[file_index], current_line, macro_name);
 						continue;
 					}
 
-
 				}
 			}
-			/* free(macro_name); */
 		}
 
 		file_index++;
@@ -159,6 +163,34 @@ int main(int argc, char *argv[]) {
 	}
 
 	return 0;
+}
+
+/* After fixing double pointers, replace with what's inside main */
+void getMacroNameFromLine(char *fileLine, int *ptrnIdx, char **macro_name) {
+	while(fileLine[*ptrnIdx] != ' ' && fileLine[*ptrnIdx] != '\n', fileLine[*ptrnIdx] != '\t' && fileLine[*ptrnIdx] != '\0') {
+		*macro_name[strlen(*macro_name)] = fileLine[(*ptrnIdx)++];
+		*macro_name = (char *)realloc(*macro_name, strlen(*macro_name) + 1); /* Make sure there is enough space for the macro_name */
+		checkAlloc(*macro_name);
+	}
+	/* Last line with text in the file might not have a newline (blank line after it)*/
+	/* Replace \n with \0 at the end */
+	if(*macro_name[strlen(*macro_name) - 1] == '\n') 
+		*macro_name[strlen(*macro_name) - 1] = '\0';
+	else
+		*macro_name[strlen(*macro_name)] = '\0';
+}
+
+/*
+Check if pointer allocation successeded
+
+@param *ptr Copy of the same pointer that points to the same place
+@return void
+*/
+void checkAlloc(void *ptr) {
+	if(ptr == NULL) {
+		fprintf(stderr, "ERROR: Memory allocation failed\n");
+		exit(1);
+	}
 }
 
 /* 
