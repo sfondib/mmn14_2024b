@@ -23,6 +23,7 @@ typedef enum booleans {
 /**
 * For both runs
 * Moves the index to the next place in string where there is no white char 
+* ראיתי את באיזשהו פרויקט זה יכול להיות שימושי
 */
 #define MOVE_TO_NOT_WHITE(string, index) \
         for (;string[(index)] && (string[(index)] == '\t' || string[(index)] == ' '); (++(index))) \
