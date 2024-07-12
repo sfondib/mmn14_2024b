@@ -88,58 +88,70 @@ int main(int argc, char *argv[]) {
 	char *macro_name = NULL;
 	
 	if(argc < 2) {
-		fprintf(stderr, "No files passed as arguments\n");
+		fprintf(stderr, "ERROR: No files passed as arguments\n");
 		exit(1);
 	}
 
-	macro_name = (char *)malloc(sizeof(char));
+	/* macro_name = (char *)malloc(sizeof(char)); */
 
 	/* Loop through all files */
 	while(file_index < argc) {
+
 		/* Attempt to open a file with the .as file extension */
 		if(!(fp = fopen(strcat(argv[file_index], ".as"), "r"))) {
 			fprintf(stderr, "Unable to open file %s\n", argv[file_index++]);
 			continue;
 		}
 		
-		current_line = 0;
+		current_line = 1;
 		while(fgets(line, MAX_LINE_LEN, fp)) {
-			macro_name = (char *)realloc(macro_name, sizeof(char));
-			current_line++;
+
+			if(!(macro_name = (char *)malloc(sizeof(char)))) {
+				fprintf(stderr, "ERROR: Memory allocation failed\n");
+				exit(1);
+			}
+			macro_name[0] = '\0';
+			
 			if((pattern_index = patternStartIndex(line, MACRO_START)) != -1) {
 				if(pattern_index) {
 					fprintf(stderr, "ERROR: File (%s) > Line (%d)\n\tMacro definition has leading characters\n", argv[file_index], current_line);
-					continue;
+					continue; /* continue instead of break so all errors are printed */
 				} else {
 					/* Macro definition found, skip keyword and whitespace characters */
 					macro_start_line_num = current_line;
-					pattern_index += strlen(MACRO_START) + 1;
+					pattern_index += strlen(MACRO_START) + 1; /* Use pattern index for writing to macro_name */
 					MOVE_TO_NOT_WHITE(line, pattern_index);
 
 					/* Read the name until a whitespace or end of line reached */
 					while(line[pattern_index] != ' ' && line[pattern_index] != '\n', line[pattern_index] != '\t' && line[pattern_index] != '\0') {
-						printf("LENGTH OF MACRO_NAME IS (%ld)\n", strlen(macro_name));
+						/* printf("LENGTH OF MACRO_NAME IS (%ld)\n", strlen(macro_name)); */
 						macro_name[strlen(macro_name)] = line[pattern_index++];
-						macro_name = (char *)realloc(macro_name, strlen(macro_name) + 1);
+						macro_name = (char *)realloc(macro_name, strlen(macro_name) + 1); /* Make sure there is enough space for the macro_name */
 					}
-					/* If length of macro_name is 0 then no name was passed */
+
+					/* If length of macro name is 0 then no name was passed */
 					if(!strlen(macro_name)) {
 						fprintf(stderr, "ERROR: File (%s) > Line (%d)\n\tMissing name for macro definition\n", argv[file_index], current_line);
+						continue; /* continue instead of break so all errors are printed */
+					}
+
+					/* Last line with text in the file might not have a newline (blank line after it)*/
+					if(macro_name[strlen(macro_name) - 1] == '\n') 
+						macro_name[strlen(macro_name) - 1] = '\0'; /* Replace \n with \0 at the end */
+					else
+						macro_name[strlen(macro_name)] = '\0'; /* Replace \n with \0 at the end */
+					
+					printf("macro_name: %s\n", macro_name);
+					/* Validate macro name */
+					if(checkValidMacroName(macro_name)) {
+						fprintf(stderr, "ERROR: File (%s) > Line (%d)\n\tInvalid macro name in macro definition\n\t(%s) is a reserved keyword\n", argv[file_index], current_line, macro_name);
 						continue;
 					}
 
-					/* Find way to reset macro_name when done using it for current macro that was found (so it can
-					be used for the next macros to be found) */
 
-					/* get what's after the whitespaces using getLine(), that would be the name of the macro
-					if what was read has a whitespace and then more characters then macro definition is invalid */
-
-					/* Write function getWordFromIndex() to read a word until a whitespace is encountered */
-
-					/* "macr" found at the start of a line */
-					/* check the text, compare it to valid names using the checkValidMacroName() function */
 				}
 			}
+			/* free(macro_name); */
 		}
 
 		file_index++;
