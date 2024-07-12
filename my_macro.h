@@ -7,7 +7,7 @@
 #define MACRO_END				"endmacr"
 
 /* Initial IC value */
-#define IC_INIT_VALUE 100
+#define IC_START_VALUE 100
 
 /* Boolean helpers - bool */
 typedef enum booleans {
