@@ -28,6 +28,7 @@ TO-DO:
 #include "my_macro.h"
 
 /* Definitions */
+#define PRINT_ERROR(FILE_NAME, LINE_NUMBER, ERROR_CODE) (fprintf(stderr, (error_messages[(ERROR_CODE)]), (FILE_NAME), (LINE_NUMBER)))
 #pragma GCC diagnostic ignored "-Wunused-variable"			/* REMOVE LATER */
 #pragma GCC diagnostic ignored "-Wunused-value"				/* REMOVE LATER */
 #pragma GCC diagnostic ignored "-Wunused-but-set-variable"	/* REMOVE LATER */
@@ -37,14 +38,15 @@ int checkValidMacroName(char *);
 int patternStartIndex(char *, char *);
 void checkAlloc(void *);
 void getMacroNameFromLine(char *, int *, char **);
+int checkWhitespace(char *, int *);
 
 /* Struct to hold data for a single macro */
-typedef struct macro_data {
+typedef struct {
 	char *macro_lines[1]; /* Maybe use malloc / realloc since number of lines for macro is unknown, another option is
 	doing (macro_end_line_num - macro_start_line_num) to find how many lines while creating the struct */
 	int macro_lims[2]; /* [0] = start-line, [1] = end-line */
 	char *macro_name;
-} macro_data_d;
+} Macro_data;
 
 /* Macro names must not be names of operations or instructions */
 char *invalid_macro_names[] = {
@@ -69,6 +71,14 @@ char *invalid_macro_names[] = {
 	"entry",
 	"extern",
 };
+/* Possible error messages */
+char *error_messages[] = {
+	"ERROR: File (%s) > Line (%d)\n\tMacro definition has leading characters\n",
+	"ERROR: File (%s) > Line (%d)\n\tMissing name for macro definition\n",
+	"ERROR: File (%s) > Line (%d)\n\tInvalid macro name in macro definition\n",
+	"ERROR: File (%s) > Line (%d)\n\tExtra characters after macro name\n",
+	"ERROR: No files passed as arguments\n",
+};
 char line[MAX_LINE_LEN]; /* ??? Maybe make local to the calling function ??? */
 int error_found = 0; /* ??? Maybe make local to calling function ???*/
 
@@ -88,13 +98,13 @@ int main(int argc, char *argv[]) {
 	int macro_start_line_num;
 	int macro_end_line_num;
 	char *macro_name;
+	int in_macro = 0;
+	Macro_data saved_macros[1];
 	
 	if(argc < 2) {
-		fprintf(stderr, "ERROR: No files passed as arguments\n");
+		PRINT_ERROR(0, 0, 4);
 		exit(1);
 	}
-
-	/* macro_name = (char *)malloc(sizeof(char)); */
 
 	/* Loop through all files */
 	while(file_index < argc) {
@@ -113,29 +123,28 @@ int main(int argc, char *argv[]) {
 			/* Make sure not pointing to same place in memory and free it */
 			macro_name = NULL; /* Overcome null terminator in previous iterations */
 			free(macro_name);
-
 			macro_name = (char *)malloc(sizeof(char));
 			checkAlloc(macro_name);
 			/* macro_name[0] = '\0'; */
 			
 			if((pattern_index = patternStartIndex(line, MACRO_START)) != -1) {
 				if(pattern_index) {
-					fprintf(stderr, "ERROR: File (%s) > Line (%d)\n\tMacro definition has leading characters\n", argv[file_index], current_line);
+					PRINT_ERROR(argv[file_index], current_line, 0);
 					continue; /* continue instead of break so all errors are printed */
 				} else {
+					in_macro = 1;
 					/* Macro definition found, skip keyword and whitespace characters */
 					macro_start_line_num = current_line;
 					pattern_index += strlen(MACRO_START) + 1; /* Use pattern index for writing to macro_name */
 					MOVE_TO_NOT_WHITE(line, pattern_index);
 
 					/* Read the name until a whitespace or end of line reached */
-					while(line[pattern_index] != ' ' && line[pattern_index] != '\n', line[pattern_index] != '\t' && line[pattern_index] != '\0') {
+					while(checkWhitespace(line, &pattern_index)) {
 						macro_name[strlen(macro_name)] = line[pattern_index++];
 						macro_name = (char *)realloc(macro_name, strlen(macro_name) + 1); /* Make sure there is enough space for the macro_name */
 						checkAlloc(macro_name);
 					}
-
-					/* Last line with text in the file might not have a newline (blank line after it)*/
+					/* Last line with text in the file might not have a newline (blank line after it) */
 					/* Replace \n with \0 at the end */
 					if(macro_name[strlen(macro_name) - 1] == '\n') 
 						macro_name[strlen(macro_name) - 1] = '\0';
@@ -144,44 +153,77 @@ int main(int argc, char *argv[]) {
 
 					/* If length of macro name is 0 then no name was passed */
 					if(!strlen(macro_name)) {
-						fprintf(stderr, "ERROR: File (%s) > Line (%d)\n\tMissing name for macro definition\n", argv[file_index], current_line);
-						continue; /* continue instead of break so all errors are printed */
+						PRINT_ERROR(argv[file_index], current_line, 1);
+						continue;
 					}
 					
 					/* Validate macro name */
 					if(checkValidMacroName(macro_name)) {
-						fprintf(stderr, "ERROR: File (%s) > Line (%d)\n\tInvalid macro name in macro definition\n\t(%s) is a reserved keyword\n", argv[file_index], current_line, macro_name);
+						PRINT_ERROR(argv[file_index], current_line, 2);
 						continue;
 					}
 
+					/* Check for extra text after the name in the macro definition */
+					MOVE_TO_NOT_WHITE(line, pattern_index);
+					if(checkWhitespace(line, &pattern_index)) {
+						PRINT_ERROR(argv[file_index], current_line, 3);
+						continue;
+					}
+
+					/* Check if macro name already defined */
+					/* Create struct to hold the macro data */
+
 				}
+			} else {
+				/* Not macro DEFINITION, check if macro CALL */
+				pattern_index = 0;
+				while(checkWhitespace(line, &pattern_index)) {
+					macro_name[strlen(macro_name)] = line[pattern_index++];
+					macro_name = (char *)realloc(macro_name, strlen(macro_name) + 1); /* Make sure there is enough space for the macro_name */
+					checkAlloc(macro_name);
+				}
+				/* Last line with text in the file might not have a newline (blank line after it)*/
+				/* Replace \n with \0 at the end */
+				if(macro_name[strlen(macro_name) - 1] == '\n') 
+					macro_name[strlen(macro_name) - 1] = '\0';
+				else
+					macro_name[strlen(macro_name)] = '\0';
+				printf("Non-Macro found: %s\n", macro_name);
 			}
 		}
-
 		file_index++;
 		fclose(fp);
 	}
-
 	return 0;
 }
 
-/* After fixing double pointers, replace with what's inside main */
+/* 
+Checks if the current character is a whitespace
+
+@param *line The line that was read
+@param *ptrn_idx The current index in the line that was read
+@return 1 if not a whitespace, 0 otherwise
+*/
+int checkWhitespace(char *line, int *ptrn_idx) {
+	return (line[*ptrn_idx] != ' ') && (line[*ptrn_idx] != '\n') && (line[*ptrn_idx] != '\t') && (line[*ptrn_idx] != '\0');
+}
+
+/*
 void getMacroNameFromLine(char *fileLine, int *ptrnIdx, char **macro_name) {
 	while(fileLine[*ptrnIdx] != ' ' && fileLine[*ptrnIdx] != '\n', fileLine[*ptrnIdx] != '\t' && fileLine[*ptrnIdx] != '\0') {
 		*macro_name[strlen(*macro_name)] = fileLine[(*ptrnIdx)++];
-		*macro_name = (char *)realloc(*macro_name, strlen(*macro_name) + 1); /* Make sure there is enough space for the macro_name */
+		*macro_name = (char *)realloc(*macro_name, strlen(*macro_name) + 1);
 		checkAlloc(*macro_name);
 	}
-	/* Last line with text in the file might not have a newline (blank line after it)*/
-	/* Replace \n with \0 at the end */
 	if(*macro_name[strlen(*macro_name) - 1] == '\n') 
 		*macro_name[strlen(*macro_name) - 1] = '\0';
 	else
 		*macro_name[strlen(*macro_name)] = '\0';
 }
+*/
 
 /*
-Check if pointer allocation successeded
+Check if pointer allocation succeeded
 
 @param *ptr Copy of the same pointer that points to the same place
 @return void
