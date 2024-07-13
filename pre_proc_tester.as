@@ -7,6 +7,8 @@ macr testmacro123name
 macr         bne  test2
 macr israel     test3
 
+endmacr
+
 asd
 
 macr  jmp

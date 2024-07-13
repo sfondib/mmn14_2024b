@@ -42,7 +42,7 @@ int checkWhitespace(char *, int *);
 
 /* Struct to hold data for a single macro */
 typedef struct {
-	char *macro_lines[1]; /* Maybe use malloc / realloc since number of lines for macro is unknown, another option is
+	char **lines; /* Maybe use malloc / realloc since number of lines for macro is unknown, another option is
 	doing (macro_end_line_num - macro_start_line_num) to find how many lines while creating the struct */
 	int macro_lims[2]; /* [0] = start-line, [1] = end-line */
 	char *macro_name;
@@ -78,6 +78,7 @@ char *error_messages[] = {
 	"ERROR: File (%s) > Line (%d)\n\tInvalid macro name in macro definition\n",
 	"ERROR: File (%s) > Line (%d)\n\tExtra characters after macro name\n",
 	"ERROR: No files passed as arguments\n",
+	"ERROR: Memory allocation failed\n",
 };
 char line[MAX_LINE_LEN]; /* ??? Maybe make local to the calling function ??? */
 int error_found = 0; /* ??? Maybe make local to calling function ???*/
@@ -129,6 +130,11 @@ int main(int argc, char *argv[]) {
 			
 			if((pattern_index = patternStartIndex(line, MACRO_START)) != -1) {
 				if(pattern_index) {
+					/* Incase macr was detected inside endmacr */
+					pattern_index = patternStartIndex(line, MACRO_END);
+					if(!pattern_index) {
+						goto endmacr_jump;
+					}
 					PRINT_ERROR(argv[file_index], current_line, 0);
 					continue; /* continue instead of break so all errors are printed */
 				} else {
@@ -175,20 +181,21 @@ int main(int argc, char *argv[]) {
 
 				}
 			} else {
-				/* Not macro DEFINITION, check if macro CALL */
-				pattern_index = 0;
-				while(checkWhitespace(line, &pattern_index)) {
-					macro_name[strlen(macro_name)] = line[pattern_index++];
-					macro_name = (char *)realloc(macro_name, strlen(macro_name) + 1); /* Make sure there is enough space for the macro_name */
-					checkAlloc(macro_name);
-				}
-				/* Last line with text in the file might not have a newline (blank line after it)*/
-				/* Replace \n with \0 at the end */
-				if(macro_name[strlen(macro_name) - 1] == '\n') 
-					macro_name[strlen(macro_name) - 1] = '\0';
-				else
-					macro_name[strlen(macro_name)] = '\0';
-				printf("Non-Macro found: %s\n", macro_name);
+				endmacr_jump:
+					/* Not macro DEFINITION, check if macro CALL or endmacr */
+					pattern_index = 0;
+					while(checkWhitespace(line, &pattern_index)) {
+						macro_name[strlen(macro_name)] = line[pattern_index++];
+						macro_name = (char *)realloc(macro_name, strlen(macro_name) + 1); /* Make sure there is enough space for the macro_name */
+						checkAlloc(macro_name);
+					}
+					/* Last line with text in the file might not have a newline (blank line after it)*/
+					/* Replace \n with \0 at the end */
+					if(macro_name[strlen(macro_name) - 1] == '\n') 
+						macro_name[strlen(macro_name) - 1] = '\0';
+					else
+						macro_name[strlen(macro_name)] = '\0';
+					printf("Non-Macro found: %s\n", macro_name);
 			}
 		}
 		file_index++;
@@ -205,7 +212,10 @@ Checks if the current character is a whitespace
 @return 1 if not a whitespace, 0 otherwise
 */
 int checkWhitespace(char *line, int *ptrn_idx) {
-	return (line[*ptrn_idx] != ' ') && (line[*ptrn_idx] != '\n') && (line[*ptrn_idx] != '\t') && (line[*ptrn_idx] != '\0');
+	return (line[*ptrn_idx] != ' ') && \
+		(line[*ptrn_idx] != '\n') && \
+		(line[*ptrn_idx] != '\t') && \
+		(line[*ptrn_idx] != '\0');
 }
 
 /*
@@ -230,7 +240,7 @@ Check if pointer allocation succeeded
 */
 void checkAlloc(void *ptr) {
 	if(ptr == NULL) {
-		fprintf(stderr, "ERROR: Memory allocation failed\n");
+		PRINT_ERROR(0, 0, 5);
 		exit(1);
 	}
 }
@@ -244,10 +254,12 @@ names that are used for operations or instructions
 */
 int checkValidMacroName(char *macro_name) {
 	int i;
+
 	/* Compare with each name on the list of invalid names */
 	for(i = 0; i < NUM_INVALID_MACRO_NAMES; i++)
 		if(!strcmp(macro_name, invalid_macro_names[i]))
 			return 1;
+	
 	return 0;
 }
 
