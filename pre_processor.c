@@ -28,7 +28,6 @@ TO-DO:
 #include "my_macro.h"
 
 /* Definitions */
-#define PRINT_ERROR(FILE_NAME, LINE_NUMBER, ERROR_CODE) (fprintf(stderr, (error_messages[(ERROR_CODE)]), (FILE_NAME), (LINE_NUMBER)))
 #pragma GCC diagnostic ignored "-Wunused-variable"			/* REMOVE LATER */
 #pragma GCC diagnostic ignored "-Wunused-value"				/* REMOVE LATER */
 #pragma GCC diagnostic ignored "-Wunused-but-set-variable"	/* REMOVE LATER */
@@ -102,6 +101,7 @@ int main(int argc, char *argv[]) {
 	int in_macro = 0;
 	Macro_data saved_macros[1];
 	
+	/* No files passed as arguments */
 	if(argc < 2) {
 		PRINT_ERROR(0, 0, 4);
 		exit(1);
@@ -126,7 +126,6 @@ int main(int argc, char *argv[]) {
 			free(macro_name);
 			macro_name = (char *)malloc(sizeof(char));
 			checkAlloc(macro_name);
-			/* macro_name[0] = '\0'; */
 			
 			if((pattern_index = patternStartIndex(line, MACRO_START)) != -1) {
 				if(pattern_index) {

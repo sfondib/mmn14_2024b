@@ -25,6 +25,7 @@ typedef enum booleans {
 * Moves the index to the next place in string where there is no white char 
 * ראיתי את באיזשהו פרויקט זה יכול להיות שימושי
 */
+#define PRINT_ERROR(FILE_NAME, LINE_NUMBER, ERROR_CODE) (fprintf(stderr, (error_messages[(ERROR_CODE)]), (FILE_NAME), (LINE_NUMBER)))
 #define MOVE_TO_NOT_WHITE(string, index) \
         for (;string[(index)] && (string[(index)] == '\t' || string[(index)] == ' '); (++(index))) \
         ;
