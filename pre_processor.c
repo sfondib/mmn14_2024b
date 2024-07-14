@@ -35,14 +35,17 @@ TO-DO:
 /* Prototypes */
 int checkValidMacroName(char *);
 int patternStartIndex(char *, char *);
+int checkWhitespace(char *, int *);
+int checkMacroAlreadyDefined(char *, int);
 void checkAlloc(void *);
 void getMacroNameFromLine(char *, int *, char **);
-int checkWhitespace(char *, int *);
+void addNewMacroToList(int, char *);
+void initMacroList(void);
+void addMacroLinesToList(FILE *, int);
 
 /* Struct to hold data for a single macro */
 typedef struct {
-	char **lines; /* Maybe use malloc / realloc since number of lines for macro is unknown, another option is
-	doing (macro_end_line_num - macro_start_line_num) to find how many lines while creating the struct */
+	char **lines;
 	int macro_lims[2]; /* [0] = start-line, [1] = end-line */
 	char *macro_name;
 } Macro_data;
@@ -78,9 +81,12 @@ char *error_messages[] = {
 	"ERROR: File (%s) > Line (%d)\n\tExtra characters after macro name\n",
 	"ERROR: No files passed as arguments\n",
 	"ERROR: Memory allocation failed\n",
+	"ERROR: File (%s) > Line (%d)\n\tAttempt to redefine already defined macro\n"
 };
 char line[MAX_LINE_LEN]; /* ??? Maybe make local to the calling function ??? */
 int error_found = 0; /* ??? Maybe make local to calling function ???*/
+Macro_data *saved_macros = NULL;
+int macro_list_length = 1;
 
 /*
 The function receives .as files with assembly instructions and
@@ -99,8 +105,10 @@ int main(int argc, char *argv[]) {
 	int macro_end_line_num;
 	char *macro_name;
 	int in_macro = 0;
-	Macro_data saved_macros[1];
-	
+
+	saved_macros = malloc(sizeof(Macro_data));
+	initMacroList();
+
 	/* No files passed as arguments */
 	if(argc < 2) {
 		PRINT_ERROR(0, 0, 4);
@@ -176,30 +184,79 @@ int main(int argc, char *argv[]) {
 					}
 
 					/* Check if macro name already defined */
-					/* Create struct to hold the macro data */
+					if(checkMacroAlreadyDefined(macro_name, macro_list_length)) {
+						PRINT_ERROR(argv[file_index], current_line, 6);
+						continue;
+					}
+
+					/* Previous test passed (Macro name not defined), save new macro */
 
 				}
 			} else {
 				endmacr_jump:
 					/* Not macro DEFINITION, check if macro CALL or endmacr */
+					/*
 					pattern_index = 0;
 					while(checkWhitespace(line, &pattern_index)) {
 						macro_name[strlen(macro_name)] = line[pattern_index++];
-						macro_name = (char *)realloc(macro_name, strlen(macro_name) + 1); /* Make sure there is enough space for the macro_name */
+						macro_name = (char *)realloc(macro_name, strlen(macro_name) + 1);
 						checkAlloc(macro_name);
 					}
-					/* Last line with text in the file might not have a newline (blank line after it)*/
-					/* Replace \n with \0 at the end */
 					if(macro_name[strlen(macro_name) - 1] == '\n') 
 						macro_name[strlen(macro_name) - 1] = '\0';
 					else
 						macro_name[strlen(macro_name)] = '\0';
-					printf("Non-Macro found: %s\n", macro_name);
+					*/
+					printf("Non-Macro found: %s\n", "hello");
 			}
 		}
 		file_index++;
 		fclose(fp);
 	}
+	free(saved_macros);
+	return 0;
+}
+
+/*
+**lines and *macro_name in the struct have no default value, this function is used
+to initialize the first macro that is created immediately to avoid segmentation fault
+when trying to access **lines or *macro_name
+*/
+void initMacroList(void) {
+	saved_macros[0].lines = NULL;
+	saved_macros[0].macro_name = NULL;
+}
+
+/* When reading also check for endmacr (and save the line number) */
+void addMacroLinesToList(FILE *fp, int macro_num_in_list) {
+	return;
+}
+
+/* Check endmacr later */
+void addNewMacroToList(int macro_start_line, char *macro_name) {
+	return;
+}
+
+/*
+Checks if a name for a macro already exists in the macro list
+
+@param *tested_macro_name Name of the macro to check if it already exists
+@param macro_list_length Length of the list of macros
+@return 1 if name of macro already exists, 0 otherwise
+*/
+int checkMacroAlreadyDefined(char *tested_macro_name, int macro_list_length) {
+	int i;
+	for(i = 0; i <= macro_list_length; i++) {
+		/* Check if first macro to be added */
+		if(saved_macros[i].macro_name == NULL)
+			return 0;
+		/* If not first macro to be added, compare it to existing macros */
+		if(strcmp(saved_macros[i].macro_name, tested_macro_name) == 0) {
+			printf("saved_macros[i]: %s\nmacro_name: %s\n", saved_macros[i].macro_name, tested_macro_name);
+			return 1;
+		}
+	}
+
 	return 0;
 }
 
