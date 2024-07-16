@@ -31,6 +31,13 @@ TO-DO:
 #pragma GCC diagnostic ignored "-Wunused-variable"			/* REMOVE LATER */
 #pragma GCC diagnostic ignored "-Wunused-value"				/* REMOVE LATER */
 #pragma GCC diagnostic ignored "-Wunused-but-set-variable"	/* REMOVE LATER */
+/* Struct to hold data for a single macro */
+typedef struct macro_data macro_d;
+struct macro_data {
+	char **lines;
+	int macro_lims[2]; /* [0] = start-line, [1] = end-line */
+	char *macro_name;
+};
 
 /* Prototypes */
 int checkValidMacroName(char *);
@@ -40,15 +47,9 @@ int checkMacroAlreadyDefined(char *, int);
 void checkAlloc(void *);
 void getMacroNameFromLine(char *, int *, char **);
 void addNewMacroToList(int, char *);
-void initMacroList(void);
+void initMacroList(int);
 void addMacroLinesToList(FILE *, int);
-
-/* Struct to hold data for a single macro */
-typedef struct {
-	char **lines;
-	int macro_lims[2]; /* [0] = start-line, [1] = end-line */
-	char *macro_name;
-} Macro_data;
+void freeMacroFromList(macro_d **);
 
 /* Macro names must not be names of operations or instructions */
 char *invalid_macro_names[] = {
@@ -85,7 +86,7 @@ char *error_messages[] = {
 };
 char line[MAX_LINE_LEN]; /* ??? Maybe make local to the calling function ??? */
 int error_found = 0; /* ??? Maybe make local to calling function ???*/
-Macro_data *saved_macros = NULL;
+macro_d *saved_macros = NULL;
 int macro_list_length = 1;
 
 /*
@@ -106,8 +107,8 @@ int main(int argc, char *argv[]) {
 	char *macro_name;
 	int in_macro = 0;
 
-	saved_macros = malloc(sizeof(Macro_data));
-	initMacroList();
+	saved_macros = malloc(sizeof(macro_d));
+	initMacroList(0);
 
 	/* No files passed as arguments */
 	if(argc < 2) {
@@ -140,6 +141,8 @@ int main(int argc, char *argv[]) {
 					/* Incase macr was detected inside endmacr */
 					pattern_index = patternStartIndex(line, MACRO_END);
 					if(!pattern_index) {
+						macro_end_line_num = current_line;
+						in_macro = 0;
 						goto endmacr_jump;
 					}
 					PRINT_ERROR(argv[file_index], current_line, 0);
@@ -190,25 +193,25 @@ int main(int argc, char *argv[]) {
 					}
 
 					/* Previous test passed (Macro name not defined), save new macro */
+					addNewMacroToList(macro_start_line_num, macro_name);
 
 				}
-			} else {
-				endmacr_jump:
-					/* Not macro DEFINITION, check if macro CALL or endmacr */
-					/*
-					pattern_index = 0;
-					while(checkWhitespace(line, &pattern_index)) {
-						macro_name[strlen(macro_name)] = line[pattern_index++];
-						macro_name = (char *)realloc(macro_name, strlen(macro_name) + 1);
-						checkAlloc(macro_name);
-					}
-					if(macro_name[strlen(macro_name) - 1] == '\n') 
-						macro_name[strlen(macro_name) - 1] = '\0';
-					else
-						macro_name[strlen(macro_name)] = '\0';
-					*/
-					printf("Non-Macro found: %s\n", "hello");
 			}
+			endmacr_jump:
+				/* Not macro DEFINITION, check if macro CALL or endmacr */
+				/*
+				pattern_index = 0;
+				while(checkWhitespace(line, &pattern_index)) {
+					macro_name[strlen(macro_name)] = line[pattern_index++];
+					macro_name = (char *)realloc(macro_name, strlen(macro_name) + 1);
+					checkAlloc(macro_name);
+				}
+				if(macro_name[strlen(macro_name) - 1] == '\n') 
+					macro_name[strlen(macro_name) - 1] = '\0';
+				else
+					macro_name[strlen(macro_name)] = '\0';
+				*/
+				printf("Non-Macro found: %s\n", "hello");
 		}
 		file_index++;
 		fclose(fp);
@@ -218,11 +221,25 @@ int main(int argc, char *argv[]) {
 }
 
 /*
+This frees the macro that was passed as argument and all of it's data
+
+CHECK IF IT REALLY NEEDS TO BE A DOUBLE POINTER OR JUST ONE POINTER
+@param **macro_to_release Double pointer to the macro that we want to release because otherwise a copy would be released
+@return void
+*/
+void freeMacroFromList(macro_d **macro_to_release) {
+	/* Add here looping over list of lines of the macro and release each */
+	free((*macro_to_release)->macro_name);
+	free(*macro_to_release);
+	return;
+}
+
+/*
 **lines and *macro_name in the struct have no default value, this function is used
 to initialize the first macro that is created immediately to avoid segmentation fault
 when trying to access **lines or *macro_name
 */
-void initMacroList(void) {
+void initMacroList(int index) {
 	saved_macros[0].lines = NULL;
 	saved_macros[0].macro_name = NULL;
 }
@@ -232,9 +249,29 @@ void addMacroLinesToList(FILE *fp, int macro_num_in_list) {
 	return;
 }
 
-/* Check endmacr later */
+/*
+Add a new macro that was detected to the list of defined macros. At first hold only
+the number of the line the macro starts and the name of the macro, as the end was
+not yet found
+
+@param macro_start_line Number of the line the macro starts in
+@param *macro_name The name of the macro that was detected
+@return void
+*/
 void addNewMacroToList(int macro_start_line, char *macro_name) {
-	return;
+	/* If this is the first macro to be added to the list */
+	if(macro_list_length == 1) {
+		saved_macros[0].macro_lims[0] = macro_start_line;
+		saved_macros[0].macro_name = malloc(sizeof(char) * strlen(macro_name)); /* Macro sure the struct has enough space to hold the macro name */
+		strcpy(saved_macros[0].macro_name, macro_name);
+	/* If not the first macro to be added to the list */
+	} else {
+		saved_macros = realloc(saved_macros, ++macro_list_length);
+		initMacroList(macro_list_length - 1);
+		saved_macros[macro_list_length - 1].macro_lims[0] = macro_start_line;
+		saved_macros[macro_list_length - 1].macro_name = malloc(sizeof(char) * strlen(macro_name));  /* Macro sure the struct has enough space to hold the macro name */
+		saved_macros[macro_list_length - 1].macro_name = macro_name;
+	}
 }
 
 /*
@@ -252,7 +289,7 @@ int checkMacroAlreadyDefined(char *tested_macro_name, int macro_list_length) {
 			return 0;
 		/* If not first macro to be added, compare it to existing macros */
 		if(strcmp(saved_macros[i].macro_name, tested_macro_name) == 0) {
-			printf("saved_macros[i]: %s\nmacro_name: %s\n", saved_macros[i].macro_name, tested_macro_name);
+			/* printf("saved_macros[i]: %s\nmacro_name: %s\n", saved_macros[i].macro_name, tested_macro_name); */
 			return 1;
 		}
 	}

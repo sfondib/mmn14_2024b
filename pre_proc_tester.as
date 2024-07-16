@@ -14,6 +14,7 @@ macr israel     test3
 endmacr
 
 macr valid_name
+macr valid_name
 
 asd
 
