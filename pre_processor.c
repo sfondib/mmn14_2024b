@@ -106,6 +106,7 @@ int main(int argc, char *argv[]) {
 	int macro_end_line_num;
 	char *macro_name;
 	int in_macro = 0;
+	int macro_line_index = 0;
 
 	saved_macros = malloc(sizeof(macro_d));
 	initMacroList(0);
@@ -130,12 +131,7 @@ int main(int argc, char *argv[]) {
 			
 			current_line++;
 
-			/* Make sure not pointing to same place in memory and free it */
-			macro_name = NULL; /* Overcome null terminator in previous iterations */
-			free(macro_name);
-			macro_name = (char *)malloc(sizeof(char));
-			checkAlloc(macro_name);
-			
+			/* Check if macr or endmacr keywords are in the line, if so check if it's valid */
 			if((pattern_index = patternStartIndex(line, MACRO_START)) != -1) {
 				if(pattern_index) {
 					/* Incase macr was detected inside endmacr */
@@ -148,7 +144,12 @@ int main(int argc, char *argv[]) {
 					PRINT_ERROR(argv[file_index], current_line, 0);
 					continue; /* continue instead of break so all errors are printed */
 				} else {
-					in_macro = 1;
+					/* Make sure not pointing to same place in memory and free it */
+					macro_name = NULL; /* Overcome null terminator in previous iterations */
+					free(macro_name);
+					macro_name = (char *)malloc(sizeof(char));
+					checkAlloc(macro_name);
+
 					/* Macro definition found, skip keyword and whitespace characters */
 					macro_start_line_num = current_line;
 					pattern_index += strlen(MACRO_START) + 1; /* Use pattern index for writing to macro_name */
@@ -187,17 +188,30 @@ int main(int argc, char *argv[]) {
 					}
 
 					/* Check if macro name already defined */
-					if(checkMacroAlreadyDefined(macro_name, macro_list_length)) {
+					if(checkMacroAlreadyDefined(macro_name, macro_list_length) >= 1) {
 						PRINT_ERROR(argv[file_index], current_line, 6);
 						continue;
 					}
 
 					/* Previous test passed (Macro name not defined), save new macro */
 					addNewMacroToList(macro_start_line_num, macro_name);
+					in_macro = 1;
+					continue;
+
+					endmacr_jump: /* endmacr detected, jump here, skip previous checks */
+					;
 
 				}
-			}
-			endmacr_jump:
+			} else {
+				/*if(in_macro) {*/
+					/* Save line in matching macro */
+				/*	saved_macros[checkMacroAlreadyDefined(macro_name, macro_list_length)].lines[macro_line_index] = realloc();
+					strcpy(saved_macros[checkMacroAlreadyDefined(macro_name, macro_list_length)].lines[macro_line_index][0], line);
+
+				} else {*/
+					/* Just put the line in the new file */
+				/*}*/
+
 				/* Not macro DEFINITION, check if macro CALL or endmacr */
 				/*
 				pattern_index = 0;
@@ -212,9 +226,21 @@ int main(int argc, char *argv[]) {
 					macro_name[strlen(macro_name)] = '\0';
 				*/
 				printf("Non-Macro found: %s\n", "hello");
+			}
+			
 		}
 		file_index++;
 		fclose(fp);
+		/* Open new file for writing and open the macros */
+		/*
+		HOW TO OPEN MACROS (REMEMBER: MACRO NAMES ONLY COME AFTER DEFINITION - ASSUMPTION):
+		1. If regular line (Not macro name - Compare each line with macro names) copy it to new file
+		2. If macro name:
+			2.1. Save number of last line from the original file
+			2.1. Fine the correct macro in saved_macros and copy the lines to the new file
+			2.2. After the last line was copied go back to copying regular lines
+				- Starting from the line number saved in the original file + 1
+		*/
 	}
 	free(saved_macros);
 	return 0;
@@ -290,7 +316,7 @@ int checkMacroAlreadyDefined(char *tested_macro_name, int macro_list_length) {
 		/* If not first macro to be added, compare it to existing macros */
 		if(strcmp(saved_macros[i].macro_name, tested_macro_name) == 0) {
 			/* printf("saved_macros[i]: %s\nmacro_name: %s\n", saved_macros[i].macro_name, tested_macro_name); */
-			return 1;
+			return i;
 		}
 	}
 
