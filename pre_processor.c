@@ -25,6 +25,7 @@ TO-DO:
 #include<stdio.h>
 #include<string.h>
 #include<stdlib.h>
+#include<ctype.h>
 #include "my_macro.h"
 
 /* Definitions */
@@ -82,12 +83,14 @@ char *error_messages[] = {
 	"ERROR: File (%s) > Line (%d)\n\tExtra characters after macro name\n",
 	"ERROR: No files passed as arguments\n",
 	"ERROR: Memory allocation failed\n",
-	"ERROR: File (%s) > Line (%d)\n\tAttempt to redefine already defined macro\n"
+	"ERROR: File (%s) > Line (%d)\n\tAttempt to redefine already defined macro\n",
+	"ERROR: File (%s) > Line (%d)\n\tDigit at start of macro name\n"
 };
 char line[MAX_LINE_LEN]; /* ??? Maybe make local to the calling function ??? */
 int error_found = 0; /* ??? Maybe make local to calling function ???*/
 macro_d *saved_macros = NULL;
 int macro_list_length = 1;
+int saved_macro_line_index = 1;
 
 /*
 The function receives .as files with assembly instructions and
@@ -107,6 +110,7 @@ int main(int argc, char *argv[]) {
 	char *macro_name;
 	int in_macro = 0;
 	int macro_line_index = 0;
+	int saved_macros_index;
 
 	saved_macros = malloc(sizeof(macro_d));
 	initMacroList(0);
@@ -174,6 +178,11 @@ int main(int argc, char *argv[]) {
 						continue;
 					}
 					
+					if(isdigit(macro_name[0])) {
+						PRINT_ERROR(argv[file_index], current_line, 7);
+						continue;
+					}
+
 					/* Validate macro name */
 					if(checkValidMacroName(macro_name)) {
 						PRINT_ERROR(argv[file_index], current_line, 2);
@@ -188,7 +197,7 @@ int main(int argc, char *argv[]) {
 					}
 
 					/* Check if macro name already defined */
-					if(checkMacroAlreadyDefined(macro_name, macro_list_length) >= 1) {
+					if(checkMacroAlreadyDefined(macro_name, macro_list_length) == -1) {
 						PRINT_ERROR(argv[file_index], current_line, 6);
 						continue;
 					}
@@ -199,18 +208,24 @@ int main(int argc, char *argv[]) {
 					continue;
 
 					endmacr_jump: /* endmacr detected, jump here, skip previous checks */
-					;
+					in_macro = 0;
+					continue;
 
 				}
 			} else {
-				/*if(in_macro) {*/
+				if(in_macro) {
 					/* Save line in matching macro */
-				/*	saved_macros[checkMacroAlreadyDefined(macro_name, macro_list_length)].lines[macro_line_index] = realloc();
-					strcpy(saved_macros[checkMacroAlreadyDefined(macro_name, macro_list_length)].lines[macro_line_index][0], line);
+					saved_macros_index = checkMacroAlreadyDefined(macro_name, macro_list_length);
+					printf("reached\n");
+					/* printf("saved_macros_index is: %d\ncurrent_line is: %d\nmacro_name is: %s\n", saved_macros_index, current_line, macro_name); */
+					saved_macros[saved_macros_index].lines = realloc(saved_macros[saved_macros_index].lines, saved_macros_index + 1);
+					saved_macros[saved_macros_index].lines[saved_macro_line_index] = malloc(strlen(line) * sizeof(char));
+					strcpy(saved_macros[saved_macros_index].lines[saved_macro_line_index++], line);
 
-				} else {*/
+				} else {
 					/* Just put the line in the new file */
-				/*}*/
+					;
+				}
 
 				/* Not macro DEFINITION, check if macro CALL or endmacr */
 				/*
@@ -225,7 +240,6 @@ int main(int argc, char *argv[]) {
 				else
 					macro_name[strlen(macro_name)] = '\0';
 				*/
-				printf("Non-Macro found: %s\n", "hello");
 			}
 			
 		}
@@ -266,8 +280,8 @@ to initialize the first macro that is created immediately to avoid segmentation 
 when trying to access **lines or *macro_name
 */
 void initMacroList(int index) {
-	saved_macros[0].lines = NULL;
-	saved_macros[0].macro_name = NULL;
+	saved_macros[index].lines = NULL;
+	saved_macros[index].macro_name = NULL;
 }
 
 /* When reading also check for endmacr (and save the line number) */
@@ -290,13 +304,15 @@ void addNewMacroToList(int macro_start_line, char *macro_name) {
 		saved_macros[0].macro_lims[0] = macro_start_line;
 		saved_macros[0].macro_name = malloc(sizeof(char) * strlen(macro_name)); /* Macro sure the struct has enough space to hold the macro name */
 		strcpy(saved_macros[0].macro_name, macro_name);
+		saved_macros[0].lines = (char **)malloc(saved_macro_line_index * sizeof(char *));
 	/* If not the first macro to be added to the list */
 	} else {
 		saved_macros = realloc(saved_macros, ++macro_list_length);
 		initMacroList(macro_list_length - 1);
 		saved_macros[macro_list_length - 1].macro_lims[0] = macro_start_line;
 		saved_macros[macro_list_length - 1].macro_name = malloc(sizeof(char) * strlen(macro_name));  /* Macro sure the struct has enough space to hold the macro name */
-		saved_macros[macro_list_length - 1].macro_name = macro_name;
+		strcpy(saved_macros[macro_list_length - 1].macro_name, macro_name);
+		saved_macros[macro_list_length - 1].lines = (char **)malloc(saved_macro_line_index * sizeof(char *));
 	}
 }
 
@@ -305,22 +321,22 @@ Checks if a name for a macro already exists in the macro list
 
 @param *tested_macro_name Name of the macro to check if it already exists
 @param macro_list_length Length of the list of macros
-@return 1 if name of macro already exists, 0 otherwise
+@return 0 if it's the first macro added, -1 if already exists, i for the index of where it's in saved_macros list
 */
 int checkMacroAlreadyDefined(char *tested_macro_name, int macro_list_length) {
 	int i;
 	for(i = 0; i <= macro_list_length; i++) {
+		printf("macro_name is: %s\nsaved_macros[i].macro_name is: %s\n", tested_macro_name, saved_macros[i].macro_name);
 		/* Check if first macro to be added */
 		if(saved_macros[i].macro_name == NULL)
 			return 0;
-		/* If not first macro to be added, compare it to existing macros */
+		/* If not first macro to be added, compare it to existing macros, return (-1) if redefined*/
 		if(strcmp(saved_macros[i].macro_name, tested_macro_name) == 0) {
-			/* printf("saved_macros[i]: %s\nmacro_name: %s\n", saved_macros[i].macro_name, tested_macro_name); */
-			return i;
+			return i; /* If already defined, return the index */
 		}
 	}
 
-	return 0;
+	return -1;
 }
 
 /* 
@@ -336,20 +352,6 @@ int checkWhitespace(char *line, int *ptrn_idx) {
 		(line[*ptrn_idx] != '\t') && \
 		(line[*ptrn_idx] != '\0');
 }
-
-/*
-void getMacroNameFromLine(char *fileLine, int *ptrnIdx, char **macro_name) {
-	while(fileLine[*ptrnIdx] != ' ' && fileLine[*ptrnIdx] != '\n', fileLine[*ptrnIdx] != '\t' && fileLine[*ptrnIdx] != '\0') {
-		*macro_name[strlen(*macro_name)] = fileLine[(*ptrnIdx)++];
-		*macro_name = (char *)realloc(*macro_name, strlen(*macro_name) + 1);
-		checkAlloc(*macro_name);
-	}
-	if(*macro_name[strlen(*macro_name) - 1] == '\n') 
-		*macro_name[strlen(*macro_name) - 1] = '\0';
-	else
-		*macro_name[strlen(*macro_name)] = '\0';
-}
-*/
 
 /*
 Check if pointer allocation succeeded
