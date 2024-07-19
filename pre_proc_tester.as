@@ -1,12 +1,11 @@
-
 macr testmacro123name
-abc
+cow
+horse
+dog
+blue
+red
+green
+endmacr
+macr test123
 hello
-endmacr
-macr valid_name
-israel
-endmacr
-macr also_valid
-thisisjustatest
-anothertest
 endmacr

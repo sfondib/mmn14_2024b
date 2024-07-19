@@ -131,7 +131,7 @@ int main(int argc, char *argv[]) {
 		}
 		
 		current_line = 0;
-		while(fgets(line, MAX_LINE_LEN, fp)) {
+		while(fgets(line, MAX_LINE_LEN, fp) != NULL) {
 			
 			current_line++;
 
@@ -195,7 +195,6 @@ int main(int argc, char *argv[]) {
 						continue;
 					}
 
-					/* printf("%s\n", macro_name); */
 					/* Check if macro name already defined */
 					if(checkMacroAlreadyDefined(macro_name, macro_list_length) == 1) {
 						PRINT_ERROR(argv[file_index], current_line, 6);
@@ -209,18 +208,20 @@ int main(int argc, char *argv[]) {
 
 					endmacr_jump: /* endmacr detected, jump here, skip previous checks */
 					in_macro = 0;
+					saved_macro_line_index = 1;
+					printf("endmacr detected\n");
 					continue;
 
 				}
 			} else {
 				if(in_macro) {
-					printf("Non-macro name is: %s\n", line);
+					line[strlen(line) - 1] = '\0';
+					printf("In-macro line: %s\n", line);
 					/* Save line in matching macro */
 					saved_macros_index = getMacroIndexFromList(macro_name, macro_list_length);
-					saved_macros[saved_macros_index].lines = realloc(saved_macros[saved_macros_index].lines, saved_macros_index + 1);
+					saved_macros[saved_macros_index].lines = realloc(saved_macros[saved_macros_index].lines, (saved_macro_line_index + 1) * sizeof(char *));
 					saved_macros[saved_macros_index].lines[saved_macro_line_index] = malloc(strlen(line) * sizeof(char));
 					strcpy(saved_macros[saved_macros_index].lines[saved_macro_line_index++], line);
-					/* printf("Read non-macro line: %s\n", line); */
 
 				} else {
 					/* Just put the line in the new file */
@@ -241,7 +242,7 @@ int main(int argc, char *argv[]) {
 					macro_name[strlen(macro_name)] = '\0';
 				*/
 			}
-			
+			/* printf("current line is: %d\n", current_line); */
 		}
 		file_index++;
 		fclose(fp);
@@ -306,6 +307,7 @@ void addNewMacroToList(int macro_start_line, char *macro_name) {
 		strcpy(saved_macros[0].macro_name, macro_name);
 		saved_macros[0].lines = (char **)malloc(saved_macro_line_index * sizeof(char *));
 		macro_list_length++;
+		printf("First macro added: %s\n", macro_name);
 	/* If not the first macro to be added to the list */
 	} else {
 		macro_list_length++;
