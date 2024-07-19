@@ -51,6 +51,7 @@ void addNewMacroToList(int, char *);
 void initMacroList(int);
 void addMacroLinesToList(FILE *, int);
 void freeMacroFromList(macro_d **);
+int getMacroIndexFromList(char *, int);
 
 /* Macro names must not be names of operations or instructions */
 char *invalid_macro_names[] = {
@@ -109,7 +110,6 @@ int main(int argc, char *argv[]) {
 	int macro_end_line_num;
 	char *macro_name;
 	int in_macro = 0;
-	int macro_line_index = 0;
 	int saved_macros_index;
 
 	saved_macros = malloc(sizeof(macro_d));
@@ -142,7 +142,6 @@ int main(int argc, char *argv[]) {
 					pattern_index = patternStartIndex(line, MACRO_END);
 					if(!pattern_index) {
 						macro_end_line_num = current_line;
-						in_macro = 0;
 						goto endmacr_jump;
 					}
 					PRINT_ERROR(argv[file_index], current_line, 0);
@@ -196,8 +195,9 @@ int main(int argc, char *argv[]) {
 						continue;
 					}
 
+					/* printf("%s\n", macro_name); */
 					/* Check if macro name already defined */
-					if(checkMacroAlreadyDefined(macro_name, macro_list_length) == -1) {
+					if(checkMacroAlreadyDefined(macro_name, macro_list_length) == 1) {
 						PRINT_ERROR(argv[file_index], current_line, 6);
 						continue;
 					}
@@ -214,13 +214,13 @@ int main(int argc, char *argv[]) {
 				}
 			} else {
 				if(in_macro) {
+					printf("Non-macro name is: %s\n", line);
 					/* Save line in matching macro */
-					saved_macros_index = checkMacroAlreadyDefined(macro_name, macro_list_length);
-					printf("reached\n");
-					/* printf("saved_macros_index is: %d\ncurrent_line is: %d\nmacro_name is: %s\n", saved_macros_index, current_line, macro_name); */
+					saved_macros_index = getMacroIndexFromList(macro_name, macro_list_length);
 					saved_macros[saved_macros_index].lines = realloc(saved_macros[saved_macros_index].lines, saved_macros_index + 1);
 					saved_macros[saved_macros_index].lines[saved_macro_line_index] = malloc(strlen(line) * sizeof(char));
 					strcpy(saved_macros[saved_macros_index].lines[saved_macro_line_index++], line);
+					/* printf("Read non-macro line: %s\n", line); */
 
 				} else {
 					/* Just put the line in the new file */
@@ -305,14 +305,17 @@ void addNewMacroToList(int macro_start_line, char *macro_name) {
 		saved_macros[0].macro_name = malloc(sizeof(char) * strlen(macro_name)); /* Macro sure the struct has enough space to hold the macro name */
 		strcpy(saved_macros[0].macro_name, macro_name);
 		saved_macros[0].lines = (char **)malloc(saved_macro_line_index * sizeof(char *));
+		macro_list_length++;
 	/* If not the first macro to be added to the list */
 	} else {
-		saved_macros = realloc(saved_macros, ++macro_list_length);
+		macro_list_length++;
+		saved_macros = realloc(saved_macros, macro_list_length);
 		initMacroList(macro_list_length - 1);
 		saved_macros[macro_list_length - 1].macro_lims[0] = macro_start_line;
 		saved_macros[macro_list_length - 1].macro_name = malloc(sizeof(char) * strlen(macro_name));  /* Macro sure the struct has enough space to hold the macro name */
 		strcpy(saved_macros[macro_list_length - 1].macro_name, macro_name);
 		saved_macros[macro_list_length - 1].lines = (char **)malloc(saved_macro_line_index * sizeof(char *));
+		printf("Macro added: %s\n", macro_name);
 	}
 }
 
@@ -326,12 +329,23 @@ Checks if a name for a macro already exists in the macro list
 int checkMacroAlreadyDefined(char *tested_macro_name, int macro_list_length) {
 	int i;
 	for(i = 0; i <= macro_list_length; i++) {
-		printf("macro_name is: %s\nsaved_macros[i].macro_name is: %s\n", tested_macro_name, saved_macros[i].macro_name);
 		/* Check if first macro to be added */
 		if(saved_macros[i].macro_name == NULL)
 			return 0;
-		/* If not first macro to be added, compare it to existing macros, return (-1) if redefined*/
+		/* If not first macro to be added, compare it to existing macros, return 1 if redefined*/
 		if(strcmp(saved_macros[i].macro_name, tested_macro_name) == 0) {
+			return 1; /* If already defined, return the index */
+		}
+	}
+
+	return 2;
+}
+
+int getMacroIndexFromList(char *macro_name, int macro_list_length) {
+	int i;
+	for(i = 0; i <= macro_list_length; i++) {
+		/* If not first macro to be added, compare it to existing macros, return 1 if redefined*/
+		if(strcmp(saved_macros[i].macro_name, macro_name) == 0) {
 			return i; /* If already defined, return the index */
 		}
 	}
