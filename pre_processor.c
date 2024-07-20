@@ -3,7 +3,7 @@ TO-DO:
 
 [X] check if there are more invalid macro names that need to be
 	added to the list
-[X] make hash-table for macro names and their content (OR array of
+[V] make hash-table for macro names and their content (OR array of
 	type struct with name field and contents field OR linked-list)
 [V] after reading line, check if the pattern searched for ("macr")
 	exists in it, if so then save the line number and raise flag
@@ -18,6 +18,8 @@ TO-DO:
 [X] create "pre_processor_funcs.h" and "pre_processor_funcs.c for
 	all the helper functions used for the pre-processing stage
 	(can delete prototypes and definitions after)
+[X] convert global variables to local variables (make appropriate
+	changes to functions)
 
 */
 
@@ -45,13 +47,13 @@ int checkValidMacroName(char *);
 int patternStartIndex(char *, char *);
 int checkWhitespace(char *, int *);
 int checkMacroAlreadyDefined(char *, int);
+int getMacroIndexFromList(char *, int);
 void checkAlloc(void *);
 void getMacroNameFromLine(char *, int *, char **);
 void addNewMacroToList(int, char *);
 void initMacroList(int);
 void addMacroLinesToList(FILE *, int);
 void freeMacroFromList(macro_d **);
-int getMacroIndexFromList(char *, int);
 
 /* Macro names must not be names of operations or instructions */
 char *invalid_macro_names[] = {
@@ -88,10 +90,9 @@ char *error_messages[] = {
 	"ERROR: File (%s) > Line (%d)\n\tDigit at start of macro name\n"
 };
 char line[MAX_LINE_LEN]; /* ??? Maybe make local to the calling function ??? */
-int error_found = 0; /* ??? Maybe make local to calling function ???*/
 macro_d *saved_macros = NULL;
 int macro_list_length = 1;
-int saved_macro_line_index = 1;
+int saved_macro_line_index = 0;
 
 /*
 The function receives .as files with assembly instructions and
@@ -103,6 +104,7 @@ replaces all macro calls with the matching definitions
 */
 int main(int argc, char *argv[]) {
 	FILE *fp;
+	FILE *fp2;
 	int file_index = 1; /* When passed as arguments, files start from 1 in argv */
 	int pattern_index;
 	int current_line; /* Keep track of lines for macros / errors */
@@ -123,25 +125,21 @@ int main(int argc, char *argv[]) {
 
 	/* Loop through all files */
 	while(file_index < argc) {
-
 		/* Attempt to open a file with the .as file extension */
-		if(!(fp = fopen(strcat(argv[file_index], ".as"), "r"))) {
-			fprintf(stderr, "Unable to open file %s\n", argv[file_index++]);
+		if(!(fp = fopen(argv[file_index], "r"))) {
+			fprintf(stderr, "Unable to open file %s\n", argv[file_index]);
 			continue;
 		}
-		
+
 		current_line = 0;
 		while(fgets(line, MAX_LINE_LEN, fp) != NULL) {
-			
 			current_line++;
-
 			/* Check if macr or endmacr keywords are in the line, if so check if it's valid */
 			if((pattern_index = patternStartIndex(line, MACRO_START)) != -1) {
 				if(pattern_index) {
 					/* Incase macr was detected inside endmacr */
 					pattern_index = patternStartIndex(line, MACRO_END);
 					if(!pattern_index) {
-						macro_end_line_num = current_line;
 						goto endmacr_jump;
 					}
 					PRINT_ERROR(argv[file_index], current_line, 0);
@@ -178,6 +176,7 @@ int main(int argc, char *argv[]) {
 					}
 					
 					if(isdigit(macro_name[0])) {
+						printf("%s\n", macro_name);
 						PRINT_ERROR(argv[file_index], current_line, 7);
 						continue;
 					}
@@ -208,44 +207,41 @@ int main(int argc, char *argv[]) {
 
 					endmacr_jump: /* endmacr detected, jump here, skip previous checks */
 					in_macro = 0;
-					saved_macro_line_index = 1;
+					saved_macros[saved_macros_index].macro_lims[1] = current_line;
+					saved_macro_line_index = 0;
 					printf("endmacr detected\n");
+					macro_name = NULL; /* Overcome null terminator in previous iterations */
+					free(macro_name);
+					macro_name = (char *)malloc(sizeof(char));
+					checkAlloc(macro_name);
 					continue;
-
 				}
 			} else {
+				/* If currently in a macro definition, save the line in the matching */
 				if(in_macro) {
 					line[strlen(line) - 1] = '\0';
-					printf("In-macro line: %s\n", line);
 					/* Save line in matching macro */
+					printf("In-macro line is: %s\n", line);
 					saved_macros_index = getMacroIndexFromList(macro_name, macro_list_length);
 					saved_macros[saved_macros_index].lines = realloc(saved_macros[saved_macros_index].lines, (saved_macro_line_index + 1) * sizeof(char *));
 					saved_macros[saved_macros_index].lines[saved_macro_line_index] = malloc(strlen(line) * sizeof(char));
 					strcpy(saved_macros[saved_macros_index].lines[saved_macro_line_index++], line);
-
-				} else {
-					/* Just put the line in the new file */
-					;
 				}
-
-				/* Not macro DEFINITION, check if macro CALL or endmacr */
-				/*
-				pattern_index = 0;
-				while(checkWhitespace(line, &pattern_index)) {
-					macro_name[strlen(macro_name)] = line[pattern_index++];
-					macro_name = (char *)realloc(macro_name, strlen(macro_name) + 1);
-					checkAlloc(macro_name);
-				}
-				if(macro_name[strlen(macro_name) - 1] == '\n') 
-					macro_name[strlen(macro_name) - 1] = '\0';
-				else
-					macro_name[strlen(macro_name)] = '\0';
-				*/
 			}
-			/* printf("current line is: %d\n", current_line); */
 		}
-		file_index++;
+		/* Things to reset before moving on to the next file */
 		fclose(fp);
+		macro_list_length = 1; /* Next file has it's own list of macros */
+		free(saved_macros);
+		saved_macros = malloc(sizeof(macro_d));
+		initMacroList(0);
+		if(!(fp2 = fopen(argv[file_index], "r"))) {
+			fprintf(stderr, "Unable to open file %s\n", argv[file_index]);
+			continue;
+		}
+		fgets(line, MAX_LINE_LEN, fp2);
+		printf("%s\n", line);
+
 		/* Open new file for writing and open the macros */
 		/*
 		HOW TO OPEN MACROS (REMEMBER: MACRO NAMES ONLY COME AFTER DEFINITION - ASSUMPTION):
@@ -256,8 +252,10 @@ int main(int argc, char *argv[]) {
 			2.2. After the last line was copied go back to copying regular lines
 				- Starting from the line number saved in the original file + 1
 		*/
+
+		file_index++;
 	}
-	free(saved_macros);
+	printf("Pre-Processor ended.\n");
 	return 0;
 }
 
