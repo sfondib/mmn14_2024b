@@ -105,6 +105,7 @@ replaces all macro calls with the matching definitions
 int main(int argc, char *argv[]) {
 	FILE *fp;
 	FILE *fp2;
+	FILE *fp3;
 	int file_index = 1; /* When passed as arguments, files start from 1 in argv */
 	int pattern_index;
 	int current_line; /* Keep track of lines for macros / errors */
@@ -113,6 +114,8 @@ int main(int argc, char *argv[]) {
 	char *macro_name;
 	int in_macro = 0;
 	int saved_macros_index;
+	int i;
+	int j;
 
 	saved_macros = malloc(sizeof(macro_d));
 	initMacroList(0);
@@ -209,7 +212,7 @@ int main(int argc, char *argv[]) {
 					in_macro = 0;
 					saved_macros[saved_macros_index].macro_lims[1] = current_line;
 					saved_macro_line_index = 0;
-					printf("endmacr detected\n");
+					/* printf("endmacr detected\n"); */
 					macro_name = NULL; /* Overcome null terminator in previous iterations */
 					free(macro_name);
 					macro_name = (char *)malloc(sizeof(char));
@@ -230,17 +233,40 @@ int main(int argc, char *argv[]) {
 			}
 		}
 		/* Things to reset before moving on to the next file */
+		fflush(NULL);
 		fclose(fp);
-		macro_list_length = 1; /* Next file has it's own list of macros */
-		free(saved_macros);
-		saved_macros = malloc(sizeof(macro_d));
-		initMacroList(0);
 		if(!(fp2 = fopen(argv[file_index], "r"))) {
 			fprintf(stderr, "Unable to open file %s\n", argv[file_index]);
 			continue;
 		}
-		fgets(line, MAX_LINE_LEN, fp2);
-		printf("%s\n", line);
+		if(!(fp3 = fopen(strcat(argv[file_index], ".am"), "w"))) {
+			fprintf(stderr, "Unable to create file %s\n", argv[file_index++]);
+			continue;
+		}
+		current_line = 0;
+		while(fgets(line, MAX_LINE_LEN, fp2) != NULL) {
+			current_line++;
+			for(i = 0; i < macro_list_length; i++) {
+				if(!patternStartIndex(line, saved_macros[i].macro_name)) {
+					for(j = 0; saved_macros[i].lines[j] != NULL; j++) {
+						fputs(saved_macros[i].lines[j], fp3);
+						printf("%s", saved_macros[i].lines[j]);
+					}
+				} else if(patternStartIndex(line, saved_macros[i].macro_name) > 0) {
+					fprintf(stderr, "Extra characters in macro call\n");
+				} else {
+					fputs(line, fp3);
+					printf("%s", line);
+				}
+			}
+		}
+		printf("finish\n");
+		macro_list_length = 1; /* Next file has it's own list of macros */
+		free(saved_macros);
+		saved_macros = malloc(sizeof(macro_d));
+		initMacroList(0);
+		fclose(fp2);
+		fclose(fp3);
 
 		/* Open new file for writing and open the macros */
 		/*
@@ -253,9 +279,7 @@ int main(int argc, char *argv[]) {
 				- Starting from the line number saved in the original file + 1
 		*/
 
-		file_index++;
 	}
-	printf("Pre-Processor ended.\n");
 	return 0;
 }
 
@@ -305,7 +329,7 @@ void addNewMacroToList(int macro_start_line, char *macro_name) {
 		strcpy(saved_macros[0].macro_name, macro_name);
 		saved_macros[0].lines = (char **)malloc(saved_macro_line_index * sizeof(char *));
 		macro_list_length++;
-		printf("First macro added: %s\n", macro_name);
+		/* printf("First macro added: %s\n", macro_name); */
 	/* If not the first macro to be added to the list */
 	} else {
 		macro_list_length++;
@@ -315,7 +339,7 @@ void addNewMacroToList(int macro_start_line, char *macro_name) {
 		saved_macros[macro_list_length - 1].macro_name = malloc(sizeof(char) * strlen(macro_name));  /* Macro sure the struct has enough space to hold the macro name */
 		strcpy(saved_macros[macro_list_length - 1].macro_name, macro_name);
 		saved_macros[macro_list_length - 1].lines = (char **)malloc(saved_macro_line_index * sizeof(char *));
-		printf("Macro added: %s\n", macro_name);
+		/* printf("Macro added: %s\n", macro_name); */
 	}
 }
 

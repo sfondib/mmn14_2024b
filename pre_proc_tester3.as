@@ -3,3 +3,4 @@ word
 word
 word
 endmacr
+testname
