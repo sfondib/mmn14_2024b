@@ -35,7 +35,7 @@ void add_item_to_table(table *tbl, long value, char *item, symbol_type type) {
     prev_item->next = new_item;
 }
 
-void free_table(table tbl) {
+void free_table_memory(table tbl) {
     table prev_item, curr_item = tbl;
     while (curr_item != NULL) {
         prev_item = curr_item;
