@@ -39,6 +39,6 @@ void add_item_to_table(table *tbl, long value, char *item, symbol_type type);
  * Release all memory related to the table
  * @param tbl - the table to be freed
  */
-void free_table(table tbl);
+void free_table_memory(table tbl);
 
 #endif /* TABLE_H */
