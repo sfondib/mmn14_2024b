@@ -1,4 +1,4 @@
-#define "helpful.h"
+#include "helpful.h"
 
 void *malloc_check(long size) {
 	void *ptr = malloc(size);
