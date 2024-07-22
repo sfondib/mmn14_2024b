@@ -1,3 +1,4 @@
+hello
 macr testname
 word
 word

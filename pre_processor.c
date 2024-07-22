@@ -29,6 +29,7 @@ TO-DO:
 #include<stdlib.h>
 #include<ctype.h>
 #include "my_macro.h"
+#include "pre_processor_funcs.h"
 
 /* Definitions */
 #pragma GCC diagnostic ignored "-Wunused-variable"			/* REMOVE LATER */
@@ -44,11 +45,8 @@ struct macro_data {
 
 /* Prototypes */
 int checkValidMacroName(char *);
-int patternStartIndex(char *, char *);
-int checkWhitespace(char *, int *);
 int checkMacroAlreadyDefined(char *, int);
 int getMacroIndexFromList(char *, int);
-void checkAlloc(void *);
 void getMacroNameFromLine(char *, int *, char **);
 void addNewMacroToList(int, char *);
 void initMacroList(int);
@@ -104,7 +102,6 @@ replaces all macro calls with the matching definitions
 */
 int main(int argc, char *argv[]) {
 	FILE *fp;
-	FILE *fp2;
 	FILE *fp3;
 	int file_index = 1; /* When passed as arguments, files start from 1 in argv */
 	int pattern_index;
@@ -133,6 +130,11 @@ int main(int argc, char *argv[]) {
 			fprintf(stderr, "Unable to open file %s\n", argv[file_index]);
 			continue;
 		}
+		if(!(fp3 = fopen(strcat(argv[file_index], ".am"), "w"))) {
+			fprintf(stderr, "Unable to create file %s\n", argv[file_index]);
+			continue;
+		}
+		file_index++;
 
 		current_line = 0;
 		while(fgets(line, MAX_LINE_LEN, fp) != NULL) {
@@ -179,7 +181,6 @@ int main(int argc, char *argv[]) {
 					}
 					
 					if(isdigit(macro_name[0])) {
-						printf("%s\n", macro_name);
 						PRINT_ERROR(argv[file_index], current_line, 7);
 						continue;
 					}
@@ -211,8 +212,8 @@ int main(int argc, char *argv[]) {
 					endmacr_jump: /* endmacr detected, jump here, skip previous checks */
 					in_macro = 0;
 					saved_macros[saved_macros_index].macro_lims[1] = current_line;
+					saved_macros[saved_macros_index].lines[saved_macro_line_index] = NULL;
 					saved_macro_line_index = 0;
-					/* printf("endmacr detected\n"); */
 					macro_name = NULL; /* Overcome null terminator in previous iterations */
 					free(macro_name);
 					macro_name = (char *)malloc(sizeof(char));
@@ -224,61 +225,43 @@ int main(int argc, char *argv[]) {
 				if(in_macro) {
 					line[strlen(line) - 1] = '\0';
 					/* Save line in matching macro */
-					printf("In-macro line is: %s\n", line);
 					saved_macros_index = getMacroIndexFromList(macro_name, macro_list_length);
 					saved_macros[saved_macros_index].lines = realloc(saved_macros[saved_macros_index].lines, (saved_macro_line_index + 1) * sizeof(char *));
 					saved_macros[saved_macros_index].lines[saved_macro_line_index] = malloc(strlen(line) * sizeof(char));
 					strcpy(saved_macros[saved_macros_index].lines[saved_macro_line_index++], line);
+				} else {
+					/* Avoid segmentation fault if there are no macros yes */
+					if(macro_list_length < 2) {
+						fputs(line, fp3);
+						continue;
+					}
+					/* Write line to .am file */
+					for(i = 0; i < macro_list_length; i++) {
+						/* Check if the line that was read has a macro name in it (macro call) */
+						if(!patternStartIndex(line, saved_macros[i].macro_name)) {
+							/* If so, print each and every line from the macro definition */
+							for(j = 0; saved_macros[i].lines[j] != NULL; j++) {
+								fputs(strcat(saved_macros[i].lines[j], "\n"), fp3);
+							}
+						/* If not, check if there extra characters in the macro definition */
+						} else if(patternStartIndex(line, saved_macros[i].macro_name) > 0) {
+							fprintf(stderr, "Extra characters in macro call\n");
+						/* Lastly, if it's just a normal line, just copy it */
+						} else {
+							fputs(line, fp3);
+						}
+					}
 				}
 			}
 		}
 		/* Things to reset before moving on to the next file */
 		fflush(NULL);
 		fclose(fp);
-		if(!(fp2 = fopen(argv[file_index], "r"))) {
-			fprintf(stderr, "Unable to open file %s\n", argv[file_index]);
-			continue;
-		}
-		if(!(fp3 = fopen(strcat(argv[file_index], ".am"), "w"))) {
-			fprintf(stderr, "Unable to create file %s\n", argv[file_index++]);
-			continue;
-		}
-		current_line = 0;
-		while(fgets(line, MAX_LINE_LEN, fp2) != NULL) {
-			current_line++;
-			for(i = 0; i < macro_list_length; i++) {
-				if(!patternStartIndex(line, saved_macros[i].macro_name)) {
-					for(j = 0; saved_macros[i].lines[j] != NULL; j++) {
-						fputs(saved_macros[i].lines[j], fp3);
-						printf("%s", saved_macros[i].lines[j]);
-					}
-				} else if(patternStartIndex(line, saved_macros[i].macro_name) > 0) {
-					fprintf(stderr, "Extra characters in macro call\n");
-				} else {
-					fputs(line, fp3);
-					printf("%s", line);
-				}
-			}
-		}
-		printf("finish\n");
 		macro_list_length = 1; /* Next file has it's own list of macros */
 		free(saved_macros);
 		saved_macros = malloc(sizeof(macro_d));
 		initMacroList(0);
-		fclose(fp2);
 		fclose(fp3);
-
-		/* Open new file for writing and open the macros */
-		/*
-		HOW TO OPEN MACROS (REMEMBER: MACRO NAMES ONLY COME AFTER DEFINITION - ASSUMPTION):
-		1. If regular line (Not macro name - Compare each line with macro names) copy it to new file
-		2. If macro name:
-			2.1. Save number of last line from the original file
-			2.1. Fine the correct macro in saved_macros and copy the lines to the new file
-			2.2. After the last line was copied go back to copying regular lines
-				- Starting from the line number saved in the original file + 1
-		*/
-
 	}
 	return 0;
 }
@@ -329,7 +312,6 @@ void addNewMacroToList(int macro_start_line, char *macro_name) {
 		strcpy(saved_macros[0].macro_name, macro_name);
 		saved_macros[0].lines = (char **)malloc(saved_macro_line_index * sizeof(char *));
 		macro_list_length++;
-		/* printf("First macro added: %s\n", macro_name); */
 	/* If not the first macro to be added to the list */
 	} else {
 		macro_list_length++;
@@ -339,7 +321,6 @@ void addNewMacroToList(int macro_start_line, char *macro_name) {
 		saved_macros[macro_list_length - 1].macro_name = malloc(sizeof(char) * strlen(macro_name));  /* Macro sure the struct has enough space to hold the macro name */
 		strcpy(saved_macros[macro_list_length - 1].macro_name, macro_name);
 		saved_macros[macro_list_length - 1].lines = (char **)malloc(saved_macro_line_index * sizeof(char *));
-		/* printf("Macro added: %s\n", macro_name); */
 	}
 }
 
@@ -378,33 +359,6 @@ int getMacroIndexFromList(char *macro_name, int macro_list_length) {
 }
 
 /* 
-Checks if the current character is a whitespace
-
-@param *line The line that was read
-@param *ptrn_idx The current index in the line that was read
-@return 1 if not a whitespace, 0 otherwise
-*/
-int checkWhitespace(char *line, int *ptrn_idx) {
-	return (line[*ptrn_idx] != ' ') && \
-		(line[*ptrn_idx] != '\n') && \
-		(line[*ptrn_idx] != '\t') && \
-		(line[*ptrn_idx] != '\0');
-}
-
-/*
-Check if pointer allocation succeeded
-
-@param *ptr Copy of the same pointer that points to the same place
-@return void
-*/
-void checkAlloc(void *ptr) {
-	if(ptr == NULL) {
-		PRINT_ERROR(0, 0, 5);
-		exit(1);
-	}
-}
-
-/* 
 Check if the name of the macro is valid or not, invalid names are
 names that are used for operations or instructions
 
@@ -420,26 +374,4 @@ int checkValidMacroName(char *macro_name) {
 			return 1;
 	
 	return 0;
-}
-
-/*
-Find the pattern requested in the passed string
-
-@param *string String to search in
-@param *pattern Pattern searched for
-@return Index where the "pattern" starts in "string"
-*/
-int patternStartIndex(char *string, char *pattern) {
-	int i, j, k;
-
-	for(i = 0; string[i] != '\0'; i++) {
-		/* Compare the characters in the pattern with each and every character in string */
-		for(j = i, k = 0; pattern[k] != '\0' && string[j] == pattern[k]; j++, k++)
-			;
-		/* Pattern found, return starting index in "string" */
-		if(k > 0 && pattern[k] == '\0')
-			return i;
-	}
-
-	return -1; /* Index not found */
 }
