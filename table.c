@@ -35,6 +35,16 @@ void add_item_to_table(table *tbl, long value, char *item, symbol_type type) {
     prev_item->next = new_item;
 }
 
+void add_value_if_type_match(table tbl, long to_add, symbol_type type) {
+    /* Go over each item in the table and add the value to_add if the type matches */
+    while (tbl != NULL) {
+        if (tbl->type == type) {
+            tbl->value += to_add;
+        }
+        tbl = tbl->next;
+    }
+}
+
 void free_table_memory(table tbl) {
     table prev_item, curr_item = tbl;
     while (curr_item != NULL) {
