@@ -36,12 +36,12 @@ typedef struct item {
 void add_item_to_table(table *tbl, long value, char *item, symbol_type type);
 
 /**
- * Adds the value to add into the value of each entry
+ * Adds a value to add into the value of each item in the table
  * @param tbl - table
  * @param to_add - the value to add if type and value matches
  * @param type - the type of symbols that should be add
  */
-void add_value_if_type_match(table tab, long to_add, symbol_type type);
+void add_value_if_type_match(table tbl, long to_add, symbol_type type);
 
 /**
  * Release all memory related to the table
