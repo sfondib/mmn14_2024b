@@ -8,3 +8,18 @@ void *malloc_check(long size) {
     }
     return ptr;
 }
+
+int printErrorAccordingToLine(line_info line, char *message, ...) {
+    int chars_printed;
+    va_list args; /* for formatting */
+ 
+    /* Print file name and line number */
+    fprintf(stderr,"Error In %s:%ld: ", line.file_name, line.line_number);
+    /* Initialize args to store all values after 'message' */
+    va_start(args, message);
+    chars_printed = vfprintf(stderr, message, args);
+    va_end(args);
+    fprintf(stderr, "\n"); /* Print a new line after the err message - we shouldn't calculate '\n' */
+
+    return chars_printed;
+}
