@@ -5,6 +5,7 @@
 #include <ctype.h>
 #include "my_macro.h"
 #include "pre_processor_funcs.h"
+#include "first_run_funcs.h"
 
 #pragma GCC diagnostic ignored "-Wunused-variable"
 
@@ -24,7 +25,9 @@ int main(int argc, char *argv[]) {
 
     int file_index = 1;
     int line_index;
-    int is_symbol = 0;
+    int is_symbol;
+    int is_data_store;
+    int is_extern_entry;
     int ic = 0;
     int dc = 0;
     int char_index;
@@ -33,6 +36,7 @@ int main(int argc, char *argv[]) {
     int data_or_entry; /* 0 for data, 1 for entry */
 
     char *first_field = NULL; /* Max length 31 */
+    char *second_field = NULL;
     char file_name_read[256];
     char file_line[80];
 
@@ -53,9 +57,13 @@ int main(int argc, char *argv[]) {
 		}
 
         while(fgets(file_line, 80, sfp)) {
+            is_symbol = 0;
+            is_data_store = 0;
+            is_extern_entry = 0;
             char_index = 0;
             line_index++;
 
+            MOVE_TO_NOT_WHITE(file_line, char_index);
             first_field = fieldInitialAlloc();
             getFieldFromLine(&first_field, file_line, &char_index);
 
@@ -65,6 +73,7 @@ int main(int argc, char *argv[]) {
             error_code = checkSymbolDefinition(first_field, file_line, &char_index); /* 0 is valid */
             switch(error_code) {
                 case 0:
+                    is_symbol = 1;
                     break;
                 case 1:
                     break;
@@ -73,7 +82,17 @@ int main(int argc, char *argv[]) {
                 default:
                     break;
             }
+            MOVE_TO_NOT_WHITE(file_line, char_index);
+            second_field = fieldInitialAlloc();
+            getFieldFromLine(&second_field, file_line, &char_index);
+            is_data_store = getDataStore(second_field);
+            if(!is_data_store)
+                continue;
+            is_extern_entry = getExternEntry(first_field, second_field);
+            printf("is_data_store: %d\nis_extern_entry: %d\n\n", is_data_store, is_extern_entry);
 
+            extern_entry:
+            free(second_field);
 
             free(first_field);
         }
