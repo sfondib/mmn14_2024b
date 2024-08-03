@@ -1,4 +1,7 @@
+#include <stdio.h>
+#include <stdarg.h>
 #include "helpful.h"
+#include "my_macro.h"
 
 void *malloc_check(long size) {
     void *ptr = malloc(size);
