@@ -38,3 +38,11 @@ typedef struct line_info {
 	char *file_name;
 	char *content; /* Line content (source) */
 } line_info;
+
+/* Instruction type of data, extern, entry, string */
+typedef enum instruction {
+    DATA_INST, /* data instruction */
+    STRING_INST, /* string instruction */
+    ENTRY_INST, /* entry instruction */
+    EXTERN_INST /* extern instruction */
+} instruction;
