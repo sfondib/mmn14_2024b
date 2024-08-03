@@ -13,7 +13,7 @@ bool lineIndexPass(line_info line, long *ic,*******need to complite and make it 
 	if (line.content == NULL) {
         fprintf(stderr, "Error: No file content provided for processing.\n");
         return FALSE;
-    }
+    	}
 	
 	MOVE_TO_NOT_WHITE(line.content, charIndex)
 	
