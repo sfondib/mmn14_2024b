@@ -25,11 +25,3 @@ int printErrorAccordingToLine(line_info line, char *message, ...) {
     fprintf(stderr, "\n"); /* Print a new line after error - we shouldn't calculate '\n' char */
     return chars_printed;
 }
-
-/* Instruction type of data, extern, entry, string */
-typedef enum instruction {
-    DATA_INST, /* data instruction */
-    STRING_INST, /* string instruction */
-    ENTRY_INST, /* entry instruction */
-    EXTERN_INST /* extern instruction */
-} instruction;
