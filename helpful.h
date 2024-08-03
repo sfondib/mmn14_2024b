@@ -5,7 +5,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include my_macro.h
+#include <stdarg.h>
+#include "my_macro.h"
 
 /**
  * Allocates memory in required size, if process has been failed - exits the program
