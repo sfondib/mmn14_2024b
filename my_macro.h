@@ -18,9 +18,10 @@
 /* variable of entry lenght - for second run */
 #define ENTRY_LENGTH = 6
 
-/* Boolean helpers - bool */
+/* Boolean helpers for functions - bool */
 typedef enum booleans {
-	FALSE = 0, TRUE = 1
+	FALSE = 0,
+	TRUE = 1
 } bool;
 
 /**
