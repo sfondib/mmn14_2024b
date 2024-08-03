@@ -24,12 +24,4 @@ void *malloc_check(long size);
  */
 int printErrorAccordingToLine(line_info line, char *message, ...);
 
-/* Instruction type of data, extern, entry, string */
-typedef enum instruction {
-    DATA_INST, /* data instruction */
-    STRING_INST, /* string instruction */
-    ENTRY_INST, /* entry instruction */
-    EXTERN_INST /* extern instruction */
-} instruction;
-
 #endif /* HELPFUL_H */
