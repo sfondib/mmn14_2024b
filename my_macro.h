@@ -15,6 +15,9 @@
 /* zeroize variable */
 #define ZEROIZE 0
 
+/* variable of entry lenght - for second run */
+#define ENTRY_LENGTH = 6
+
 /* Boolean helpers - bool */
 typedef enum booleans {
 	FALSE = 0, TRUE = 1
@@ -25,12 +28,11 @@ typedef enum booleans {
 * Moves the index to the next place in string where there is no white char 
 * ראיתי את באיזשהו פרויקט זה יכול להיות שימושי
 */
-#define PRINT_ERROR(FILE_NAME, LINE_NUMBER, ERROR_CODE) (fprintf(stderr, (error_messages[(ERROR_CODE)]), (FILE_NAME), (LINE_NUMBER)))
 #define MOVE_TO_NOT_WHITE(string, index) \
         for (;string[(index)] && (string[(index)] == '\t' || string[(index)] == ' '); (++(index))) \
         ;
 
-/* for accembler file */
+/* info about file name, index of line number and etc */
 typedef struct line_info {
 	long line_number;
 	char *file_name;
