@@ -9,6 +9,25 @@ char *first_run_error_codes[] = {
     "Not symbol definition",
 };
 
+char *op_names[] = {
+    "mov",
+    "cmp",
+    "add",
+    "sub",
+    "lea",
+    "clr",
+    "not",
+    "inc",
+    "dec",
+    "jmp",
+    "bne",
+    "red",
+    "prn",
+    "jsr",
+    "rts",
+    "stop",
+};
+
 /*
 Check if a line has a tag / symbol definition, if so check it's validity and return the
 appropriate error code
@@ -39,10 +58,10 @@ Check if there is an instruction to hold .data or .string
 @param *data_type The data type that was read (.data or .string or something else)
 @return 1 if it's .data, 2 if it's .string, 0 otherwise
 */
-int getDataStore(char *data_type) {
-    if(!strcmp(".data", data_type))
+int getDataStore(char *first_field, char *second_field) {
+    if(!strcmp(first_field, ".data") || !strcmp(second_field, ".data"))
         return 1;
-    else if(!strcmp(".string", data_type))
+    else if(!strcmp(first_field, ".string") || !strcmp(second_field, ".string"))
         return 2;
     return 0;
 }
@@ -60,4 +79,14 @@ int getExternEntry(char *first_field, char *second_field) {
     else if(!strcmp(first_field, ".entry") || !strcmp(second_field, ".entry"))
         return 2;
     return 0;
+}
+
+int getOperation(char *first_field, char *second_field) {
+    int i;
+
+    for(i = 0; i < NUM_OPS; i++) {
+        if(!strcmp(first_field, op_names[i]) || !strcmp(second_field, op_names[i]))
+            return i;
+    }
+    return -1;
 }
