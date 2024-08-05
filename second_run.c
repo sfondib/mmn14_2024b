@@ -44,9 +44,9 @@ bool lineIndexPass(line_info line, long *ic,*******need to complite and make it 
             printf_line_error(line, "Error. Please specify label name of .entry instruction.");
             return FALSE;
         }
-
-
-
+	}
+	    return TRUE; /* Return to step 2 */
+	}
 
 
 
