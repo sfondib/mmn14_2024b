@@ -8,3 +8,4 @@ int checkSymbolDefinition(char *first_field, char *file_line, int *char_index);
 int getDataStore(char *first_field, char *second_field);
 int getExternEntry(char *first_field, char *second_field);
 int getOperation(char *first_field, char *second_field);
+void getOperands(int op_index, int is_symbol, char *file_line, int *char_index, char **second_field, char **third_field, char **fourth_field);

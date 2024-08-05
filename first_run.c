@@ -79,11 +79,21 @@ int main(int argc, char *argv[]) {
             symbol_code = checkSymbolDefinition(first_field, file_line, &char_index); /* 0 is valid */
             switch(symbol_code) {
                 case 0:
+                    /*
+                    Symbol found, there can be 2 to 4 fields
+                    first_field would be the symbol definition
+                    second_field would be the operation name
+                    */
                     is_symbol = 1;
                     break;
                 case 1:
                     break;
                 case 2:
+                    /*
+                    Not symbol definition, there can be 1 to 3 fields
+                    first_field would be the operation name
+                    second_field and third field would be what the operation accepts (if any)
+                    */
                     break;
                 default:
                     break;
@@ -116,13 +126,8 @@ int main(int argc, char *argv[]) {
             2. Calculate l_count using the structure of the operation
             3. Build binary code and update ic = ic + l_count
             */
-            if(op_index >= 0 && op_index <= 4) {
-                ;
-            } else if(op_index >= 5 && op_index <= 13) {
-                ;
-            } else if(op_index >= 14) {
-
-            } /* No need for else because that would be (-1) which was already addressed */
+            MOVE_TO_NOT_WHITE(file_line, char_index);
+            getOperands(op_index, is_symbol, file_line, &char_index, &second_field, &third_field, &fourth_field);
 
             printf("first_field: (%s)\tsecond_field: (%s)\top_index: (%d)\tis_data_store: (%d)\tis_extern_entry: (%d)\n\n", first_field, second_field, op_index, is_data_store, is_extern_entry);
 

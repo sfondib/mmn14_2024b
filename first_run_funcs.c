@@ -1,5 +1,8 @@
 #include<string.h>
 #include<ctype.h>
+#include<stdio.h>
+#include "pre_processor_funcs.h"
+#include "my_macro.h"
 #include "first_run_funcs.h"
 
 char *first_run_error_codes[] = {
@@ -89,4 +92,47 @@ int getOperation(char *first_field, char *second_field) {
             return i;
     }
     return -1;
+}
+
+/*
+Get the operands that make up an instruction depending on if it's an operation that accepts
+2 parameters, 1 parameter or no parameters.
+The fields will be filled depending on if it's a symbol definition or not.
+@param op_index Index representing the operation
+@param is_symbol If symbol definition or not
+@param **second_field Second field in the instruction
+@param *file_line Line read from the file
+@param *char_index The index of the character in the line
+@param **third_field Third field in the instruction
+@param **fourth_field Fourth field in the instruction
+*/
+void getOperands(int op_index, int is_symbol, char *file_line, int *char_index, char **second_field, char **third_field, char **fourth_field) {
+    /* mov to sub */
+    if((op_index >= 0) && (op_index <= 4)) {
+        if(is_symbol) {
+            getFieldFromLine(third_field, file_line, char_index);
+            printf("1st operand is: %s\n", *third_field);
+            MOVE_TO_NOT_WHITE(file_line, *char_index);
+            getFieldFromLine(fourth_field, file_line, char_index);
+            printf("2nd operand is: %s\n", *fourth_field);
+        } else {
+            printf("1st operand is: %s\n", *second_field);
+            getFieldFromLine(third_field, file_line, char_index);
+            printf("2nd operand is: %s\n", *third_field);
+        }
+    /* lea to jsr */
+    } else if((op_index >= 5) & (op_index <= 13)) {
+        if(is_symbol) {
+            getFieldFromLine(third_field, file_line, char_index);
+            printf("1st operand is: %s\n", *third_field);
+        } else {
+            printf("1st operand is: %s\n", *second_field);
+        }
+    /* rts and stop */
+    } else if((op_index >= 14) && (op_index <= 15)) {
+        printf("No operands\n");
+    /* Not one of the 15 operations */
+    } else {
+        printf("Not operation\n");
+    }
 }
