@@ -9,8 +9,10 @@ bool lineIndexPass(line_info line, long *ic,*******need to complite and make it 
 	char colonIndex = ZEROIZE;    /* counter for colon index */
 	long charIndex = ZEROIZE;     /* counter for line index */
 	char *ptr; 
+	
 
 	/* step number 1: check if file passed the first run */
+	long *ic = ICIC_START_VALUE 
 	if (line.content == NULL) {
         fprintf(stderr, "Error: No file content provided for processing.\n");
         return FALSE;
