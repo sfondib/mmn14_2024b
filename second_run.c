@@ -6,9 +6,10 @@
 #include "second_pass.h"
 
 bool lineIndexPass(line_info line, long *ic,*******need to complite and make it right **********) {
-	char colonIndex = zeroize;    /* counter for colon index */
-	long charIndex = zeroize;     /* counter for line index */
-	
+	char colonIndex = ZEROIZE;    /* counter for colon index */
+	long charIndex = ZEROIZE;     /* counter for line index */
+	char *ptr; 
+
 	/* step number 1: check if file passed the first run */
 	if (line.content == NULL) {
         fprintf(stderr, "Error: No file content provided for processing.\n");
