@@ -55,24 +55,25 @@ void add_value_if_type_match(table tbl, long to_add, symbol_type type) {
 }
 
 table_item *findType(table tbl, char *key, int symbol_count, ...) {
-    va_list arglist;
+    va_list arglist;  /* Variable argument list to handle multiple symbol types */
 
-    if (tbl == NULL) {
+    if (tbl == NULL) { /* Check if table is NULL */
         return NULL;
     }
 
-    va_start(arglist, symbol_count);
+    va_start(arglist, symbol_count);  /* Initialize the argument list */
 
     /* Iterate over the table entries */
     do {
+        /* Check if the current table item matches the key and one of the valid symbol types */
         if (is_type_matching(tbl, key, arglist, symbol_count)) {
-            va_end(arglist);
-            return tbl;  /* Return the entry if a match is found */
+            va_end(arglist);  /* Clean up the argument list before returning */
+            return tbl;  /* Return the matching table item */
         }
-        va_end(arglist);  /* End the current iteration */
-        va_start(arglist, symbol_count);  /* Restart the arglist for the next iteration */
-    } while ((tbl = tbl->next) != NULL);
+        va_end(arglist);  /* End the current argument list */
+        va_start(arglist, symbol_count);  /* Reinitialize the argument list for the next iteration */
+    } while ((tbl = tbl->next) != NULL);  /* Move to the next table entry */
 
-    va_end(arglist);
-    return NULL;  /* No match found */
+    va_end(arglist);  /* Clean up the argument list after the loop */
+    return NULL;  /* No match found, return NULL */
 }
