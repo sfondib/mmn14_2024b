@@ -1,4 +1,4 @@
-/* in helpul file we will find helpful functions that will take part in the whole program */
+/* In helpful file we will find helpful functions that will take part in the whole program */
 #ifndef HELPFUL_H
 #define HELPFUL_H
 
@@ -7,6 +7,7 @@
 #include <string.h>
 #include <stdarg.h>
 #include "my_macro.h"
+#include "table.h"
 
 /**
  * Allocates memory in required size, if process has been failed - exits the program
@@ -23,5 +24,15 @@ void *malloc_check(long size);
  * @return the total number of characters printed (including line number and file name)
  */
 int printErrorAccordingToLine(line_info line, char *message, ...);
+
+/**
+ * Checks if the symbol type matches any of the valid types provided.
+ * @param tbl The current table item
+ * @param key The key to match
+ * @param arglist The variadic argument list containing the valid types
+ * @param symbol_count The number of valid symbol types
+ * @return 1 if a match is found, 0 otherwise
+ */
+int is_type_matching(table tbl, char *key, va_list arglist, int symbol_count);
 
 #endif /* HELPFUL_H */
