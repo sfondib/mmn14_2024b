@@ -3,7 +3,7 @@
 #include "my_macro.h"
 #include "table.h"
 #include "pre_processor_funcs.h"
-#include "second_pass.h"
+#include "second_run.h"
 
 bool lineIndexPass(line_info line, long *ic,*******need to complite and make it right **********) {
 	char colonIndex = ZEROIZE;    /* counter for colon index */
