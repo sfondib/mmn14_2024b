@@ -17,6 +17,7 @@ bool lineIndexPass(line_info line, long *ic, table *symbol_table) {
         return FALSE;
     }
     MOVE_TO_NOT_WHITE(line.content, charIndex);
+    
     /* Step 2: Read the next line from the source file. If end of file, go to step 9 */
     /* Continue if the line is empty or has just '\n' in content */
     if (line.content[charIndex] == ';' || line.content[charIndex] == '\n')
@@ -32,8 +33,13 @@ bool lineIndexPass(line_info line, long *ic, table *symbol_table) {
     
     /* Step 4: Is it a .DATA, .STRING, or EXTERN directive? If yes, return to step 2 */
     if (line.content[charIndex] == '.') {
-        /* Extract the directive type */
         ptr = strtok(line.content + charIndex, " \n\t");
+        
+        if (strcmp(ptr, ".data") == 0 || strcmp(ptr, ".string") == 0 || strcmp(ptr, ".extern") == 0) {
+            /* If it's .DATA, .STRING, or .EXTERN, skip the line and continue to the next line */
+            return TRUE;  /* Return to step 2 */
+        }
+        MOVE_TO_NOT_WHITE(line.content, charIndex);
         
         /* Step 5: Is it an ENTRY directive? If not, go to step 7 */
         if (strcmp(ptr, ".entry") == 0) {
