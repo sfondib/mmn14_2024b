@@ -1,6 +1,6 @@
 #ifndef TABLE_H
 #define TABLE_H
-/* Libraries*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -36,17 +36,27 @@ typedef struct item {
 void add_item_to_table(table *tbl, long value, char *item, symbol_type type);
 
 /**
- * Adds a value to add into the value of each item in the table
+ * Adds the value to add into the value of each entry
  * @param tbl - table
  * @param to_add - the value to add if type and value matches
  * @param type - the type of symbols that should be add
  */
-void add_value_if_type_match(table tbl, long to_add, symbol_type type);
+void add_value_if_type_match(table tab, long to_add, symbol_type type);
 
 /**
  * Release all memory related to the table
  * @param tbl - the table to be freed
  */
 void free_table_memory(table tbl);
+
+/**
+ * Find an item in the table by its key and a list of valid types
+ * @param tbl - the item to search
+ * @param key - the key to match
+ * @param symbol_count - the number of valid symbol types to check
+ * @param ... - variadic list of symbol types to check against
+ * @return a pointer to the matching entry, or NULL if not found
+ */
+table_item *findType(table tbl, char *key, int symbol_count, ...);
 
 #endif /* TABLE_H */
