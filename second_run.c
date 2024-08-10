@@ -82,7 +82,7 @@ bool lineIndexPass(line_info line, long *ic, table *symbol_table) {
 
 bool processFileSecondPass(FILE *file, const char *file_name, table *symbol_table) {
     char line_content[MAX_LINE_LEN];
-    long ic = ZEROIZE;  /* Step 1: Initialize IC , need to be done just once */
+    long *ic = ZEROIZE;  /* Step 1: Initialize IC , need to be done just once */
     line_info current_line;
     int line_number = 0;
     bool success = TRUE;  /* Track if any errors occur during processing */
