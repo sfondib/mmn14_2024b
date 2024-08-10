@@ -4,7 +4,7 @@
 #include "my_macro.h"
 #include "table.h"
 
-void *malloc_check(long size) {
+void *mallocCheck(long size) {
     void *ptr = malloc(size);
     if (ptr == NULL) {
         printf("Error: Memory allocation has failed, please try again.\n");
@@ -27,7 +27,7 @@ int printErrorAccordingToLine(line_info line, char *message, ...) {
     return chars_printed;
 }
 
-int is_type_matching(table tbl, char *key, va_list arglist, int symbol_count) {
+int isTypeMatching(table tbl, char *key, va_list arglist, int symbol_count) {
     int i;
     symbol_type current_type;
 
