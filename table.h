@@ -33,7 +33,7 @@ typedef struct item {
  * @param item - the entry for the new value
  * @param type - the type of the entry to insert
  */
-void add_item_to_table(table *tbl, long value, char *item, symbol_type type);
+void addItemToTable(table *tbl, long value, char *item, symbol_type type);
 
 /**
  * Adds the value to add into the value of each entry
@@ -41,13 +41,13 @@ void add_item_to_table(table *tbl, long value, char *item, symbol_type type);
  * @param to_add - the value to add if type and value matches
  * @param type - the type of symbols that should be add
  */
-void add_value_if_type_match(table tab, long to_add, symbol_type type);
+void addValueIfType_match(table tab, long to_add, symbol_type type);
 
 /**
  * Release all memory related to the table
  * @param tbl - the table to be freed
  */
-void free_table_memory(table tbl);
+void freeTableMemory(table tbl);
 
 /**
  * Find an item in the table by its key and a list of valid types
