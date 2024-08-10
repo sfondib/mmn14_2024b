@@ -1,13 +1,13 @@
 #include "helpful.h"
 #include "table.h"
 
-void add_item_to_table(table *tbl, long value, char *item, symbol_type type) {
+void addItemToTable(table *tbl, long value, char *item, symbol_type type) {
     char *temp_item;
     table prev_item, curr_item, new_item;
     
     /* Allocate memory for new and 'temp' items */
-    new_item = (table) malloc_check(sizeof(table_item));
-    temp_item = (char *) malloc_check(strlen(item) + 1);
+    new_item = (table) mallocCheck(sizeof(table_item));
+    temp_item = (char *) mallocCheck(strlen(item) + 1);
     strcpy(temp_item, item);
     
     /* Fix the member name from item to key */
@@ -34,7 +34,7 @@ void add_item_to_table(table *tbl, long value, char *item, symbol_type type) {
     prev_item->next = new_item;
 }
 
-void free_table_memory(table tbl) {
+void freeTableMemory(table tbl) {
     table prev_item, curr_item = tbl;
     while (curr_item != NULL) {
         prev_item = curr_item;
@@ -44,7 +44,7 @@ void free_table_memory(table tbl) {
     }
 }
 
-void add_value_if_type_match(table tbl, long to_add, symbol_type type) {
+void addValueIfTypeMatch(table tbl, long to_add, symbol_type type) {
     /* Go over each item in the table and add the value to_add if the type matches */
     while (tbl != NULL) {
         if (tbl->type == type) {
@@ -66,7 +66,7 @@ table_item *findType(table tbl, char *key, int symbol_count, ...) {
     /* Iterate over the table entries */
     do {
         /* Check if the current table item matches the key and one of the valid symbol types */
-        if (is_type_matching(tbl, key, arglist, symbol_count)) {
+        if (isTypeMatching(tbl, key, arglist, symbol_count)) {
             va_end(arglist);  /* Clean up the argument list before returning */
             return tbl;  /* Return the matching table item */
         }
