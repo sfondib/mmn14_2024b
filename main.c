@@ -3,6 +3,18 @@
 #include "second_run.h"
 #include "table.h"
 
+/**
+ * Main function for processing assembler files.
+ * This program processes multiple assembler files in three main steps:
+ * 1. Pre-processing: Expands macros and prepares the source code for assembly.
+ * 2. First pass: Constructs the symbol table and prepares for binary code generation.
+ * 3. Second pass: Generates the final machine code using the symbol table.
+ * Each step is performed sequentially for each input file provided as a command-line argument.
+ * @param argc - The number of command-line arguments.
+ * @param argv - Array of command-line arguments containing the file names to process.
+ * @return 0 if all files are processed successfully, 1 if errors were encountered.
+ */
+
 int main(int argc, char *argv[]) {
     FILE *file;
     table symbol_table = NULL;
