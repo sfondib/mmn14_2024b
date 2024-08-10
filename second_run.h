@@ -1,6 +1,9 @@
 #ifndef SECOND_RUN_H
 #define SECOND_RUN_H
 
+#include <stdio.h>
+#include "my_macro.h"
+#include "pre_processor_funcs.h"
 #include "helpful.h"
 #include "table.h"
 
