@@ -14,7 +14,7 @@
  * @param size - the size to allocate in bytes
  * @return a generic pointer to allocated memory
  */
-void *malloc_check(long size);
+void *mallocCheck(long size);
 
 /**
  * Prints an error message
@@ -33,6 +33,6 @@ int printErrorAccordingToLine(line_info line, char *message, ...);
  * @param symbol_count The number of valid symbol types
  * @return 1 if a match is found, 0 otherwise
  */
-int is_type_matching(table tbl, char *key, va_list arglist, int symbol_count);
+int isTypeMatching(table tbl, char *key, va_list arglist, int symbol_count);
 
 #endif /* HELPFUL_H */
