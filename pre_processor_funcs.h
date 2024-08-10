@@ -19,4 +19,5 @@ void freeMacroList(macro_dw *head);
 void getFieldFromLine(char **field, char *file_line, int *index);
 void printMacroError(int error_code, char *file_name, int line_index);
 void addLineToMacro(macro_dw* macro_node, char *file_line);
+void initializeFields(char **first_field, char **second_field, char **third_field, char **fourth_field);
 char* fieldInitialAlloc(void);

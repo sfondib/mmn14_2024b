@@ -39,22 +39,11 @@ char *error_codes[] = {
 	"No files passed as arguments",
 };
 
-/*
-Print the matching error for a macro definition
-@param error_code Integer representing the number of the error code
-@param *file_name Name of the file the error occured in
-@param line_index Line number in the file the error occured in
-*/
 void printMacroError(int error_code, char *file_name, int line_index) {
 	fprintf(stderr, "Error: %s\nFile: %s\nLine: %d\n", error_codes[error_code], file_name, line_index);
 }
 
-/*
-Add a line to the matching macro (Line was written as part of a macro definition)
-@param *macro_node The macro node to add the line to
-@param *file_line The line to copy into the macro
-*/
-void addLineToMacro(macro_dw *macro_node, char *file_line) {
+void addLineToMacro(macro_dw* macro_node, char *file_line) {
 	if(macro_node->lines == NULL) {
 		macro_node->lines = (char **)malloc(2 * sizeof(char *));
 		if(macro_node->lines == NULL) {
@@ -82,6 +71,25 @@ char* fieldInitialAlloc(void) {
 		exit(1);
 	}
 	return field;
+}
+
+/*
+Take all four fields that can make up an instruction and initialize them using the
+fieldInitialAlloc() function
+@param **first_field The first field in the instruction
+@param **second_field The second field in the instruction
+@param **third_field The third field in the instruction
+@param **fourth_field The fourth field in the instruction
+*/
+void initializeFields(char **first_field, char **second_field, char **third_field, char **fourth_field) {
+	*first_field = fieldInitialAlloc();
+	*second_field = fieldInitialAlloc();
+	*third_field = fieldInitialAlloc();
+	*fourth_field = fieldInitialAlloc();
+	strcpy(*first_field, "");
+	strcpy(*second_field, "");
+	strcpy(*third_field, "");
+	strcpy(*fourth_field, "");
 }
 
 /*
