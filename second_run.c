@@ -1,19 +1,8 @@
-#include "second_run.h"
-
-/**
- * Processes a single line during the second pass of the assembler.
- * @param line - The line information, including content, file name, and line number.
- * @param ic - A pointer to the instruction counter.
- * @param symbol_table - A pointer to the symbol table.
- * @return TRUE if processing is successful, FALSE if an error occurs.
- */
 bool lineIndexPass(line_info line, long *ic, table *symbol_table) {
     long charIndex = ZEROIZE;  /* Counter for line index */
     char *ptr;  /* Pointer for string operations */
     char *indexOfColon = NULL;  /* Pointer to locate a colon in the line */
 
-    /* Step 1: Initialize IC and check if the file passed the first run */
-    *ic = IC_START_VALUE;
     if (line.content == NULL) {
         /* Error: No content provided for processing */
         fprintf(stderr, "Error: No file content provided for processing.\n");
@@ -91,16 +80,9 @@ bool lineIndexPass(line_info line, long *ic, table *symbol_table) {
     return TRUE;  /* If no errors occurred, return TRUE */
 }
 
-/**
- * Process the entire source file in the second pass.
- * @param file - Pointer to the source file to process.
- * @param file_name - The name of the source file.
- * @param symbol_table - Pointer to the symbol table.
- * @return TRUE if processing is successful, FALSE if errors occurred.
- */
 bool processFileSecondPass(FILE *file, const char *file_name, table *symbol_table) {
     char line_content[MAX_LINE_LEN];
-    long ic = IC_START_VALUE;  /* Step 1: Initialize IC */
+    long ic = ZEROIZE;  /* Step 1: Initialize IC , need to be done just once */
     line_info current_line;
     int line_number = 0;
     bool success = TRUE;  /* Track if any errors occur during processing */
