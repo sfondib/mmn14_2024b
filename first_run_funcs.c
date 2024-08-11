@@ -43,59 +43,125 @@ char *register_names[] = {
     "r7",
 };
 
-int getFirstOperandData(char *field, int *operand1_method, int *operand1) {
-    /* Addressing method 0 - Immediate */
+/*
+Get the data from the first operand (The addressing method and value)
+@param *field The field holding the operand
+@param *operand1_method To hold the value representing the addressing method
+@param *operand1 To hold the value of the operand
+@param allow0 If addressing method 0 is allowed or not
+@param allow1 If addressing method 1 is allowed or not
+@param allow2 If addressing method 2 is allowed or not
+@param allow3 If addressing method 3 is allowed or not
+@return 1 for valid, 0 otherwise
+*/
+int getFirstOperandData(char *field, int *operand1_method, int *operand1, int allow0, int allow1, int allow2, int allow3, int comma) {
+    /* Check if immediate addressing method (0) and if it's allowed */
     if(field[0] == '#') {
-        if(!checkDirectAddressing(field)) {
+        if(allow0) {
+            if(!checkDirectAddressing(field)) {
+                fprintf(stderr, "Error: Invalid characters after #\n");
+                return 0;
+            }
+            *operand1_method = 0;
+            sscanf(field, "%d", operand1);
+        } else {
+            fprintf(stderr, "Error: Immediate addressing (method 0) not allowed for operation\n");
             return 0;
         }
-        *operand1_method = 0;
-        sscanf(field, "%d", operand1);
-    /* Addressing method 2 - Indirect register */
+    /* Check if indirect register addressing (2) and if it's allowed */
     } else if(field[0] == '*') {
-        if(!isRegisterName(field, 1, 1)) {
-            fprintf(stderr, "Error: Invalid register name\n");
+        if(allow2) {
+            if(!isRegisterName(field, 1, 1)) {
+                fprintf(stderr, "Error: Invalid register name\n");
+                return 0;
+            }
+            *operand1_method = 2;
+            *operand1 = getRegisterNumber(field, 2, comma);
+        } else {
+            fprintf(stderr, "Error: Indirect register addressing (method 2) not allowed for operation\n");
             return 0;
         }
-        *operand1_method = 2;
-        *operand1 = getRegisterNumber(field, 2, 1);
-    /* Addressing method 3 - Direct register */
-    } else if(isRegisterName(field, 0, 1)) {
-        *operand1_method = 3;
-        *operand1 = getRegisterNumber(field, 1, 1);
-    /* Addressing method 1 - Direct (symbol) */
-    } else {
-        *operand1_method = 1;
-        /* operand1 = symbol / address of symbol */
-    }
-    return 1; /* Valid */
-}
-
-int getSecondOperandData(char *field, int *operand2_method, int *operand2) {
-    /* Immediate addressing not allowed for 2nd operand */
-    if(field[0] == '#') {
-        fprintf(stderr, "Error: Immediate addressing not allowed for this operation\n");
-        return 0;  /* Invalid addressing */
-    /* Addressing method 2 - Indirect register */
-    } else if(field[0] == '*') {
-        if(!isRegisterName(field, 1, 0)) {
-            fprintf(stderr, "Error: Invalid register name\n");
-            return 0;  /* Invalid addressing */
+    /* Check if direct register addressing (3) and if it's allowed */
+    } else if((isRegisterName(field, 0, 1))) {
+        if(allow3) {
+            *operand1_method = 3;
+            *operand1 = getRegisterNumber(field, 1, comma);
+        } else {
+            fprintf(stderr, "Error: Direct register addressing (method 3) not allowed for operation\n");
+            return 0;
         }
-        *operand2_method = 2;
-        *operand2 = getRegisterNumber(field, 2, 0);
-    /* Addressing method 3 - Direct register */
-    } else if(isRegisterName(field, 0, 0)) {
-        *operand2_method = 3;
-        *operand2 = getRegisterNumber(field, 1, 0);
-    /* Addressing method 1 - Direct (symbol) */
+    /* Check if direct addressing with symbol (1) and if it's allowed */
     } else {
-        *operand2_method = 1;
-        /* operand2 = symbol / address of symbol */
+        if(allow1) {
+            *operand1_method = 1;
+            /* operand1 = symbol / address of symbol */
+        } else {
+            fprintf(stderr, "Error: Direct addressing with symbol (method 1) not allowed for operation\n");
+            return 0;
+        }
     }
-    return 1;  /* Valid addressing */
+    return 1; /* Valid operand use */
 }
 
+/*
+Get the data from the first operand (The addressing method and value)
+@param *field The field holding the operand
+@param *operand1_method To hold the value representing the addressing method
+@param *operand1 To hold the value of the operand
+@param allow0 If addressing method 0 is allowed or not
+@param allow1 If addressing method 1 is allowed or not
+@param allow2 If addressing method 2 is allowed or not
+@param allow3 If addressing method 3 is allowed or not
+@return 1 for valid, 0 otherwise
+*/
+int getSecondOperandData(char *field, int *operand2_method, int *operand2, int allow0, int allow1, int allow2, int allow3) {
+    /* Check if immediate addressing method (0) and if it's allowed */
+    if(field[0] == '#') {
+        if(allow0) {
+            if(!checkDirectAddressing(field)) {
+                fprintf(stderr, "Error: Invalid characters after #\n");
+                return 0;
+            }
+            *operand2_method = 0;
+            sscanf(field, "#%d", operand2);
+        } else {
+            fprintf(stderr, "Error: Immediate addressing (method 0) not allowed for operation\n");
+            return 0;
+        }
+    /* Check if indirect register addressing (2) and if it's allowed */
+    } else if(field[0] == '*') {
+        if(allow2) {
+            if(!isRegisterName(field, 1, 0)) {
+                fprintf(stderr, "Error: Invalid register name\n");
+                return 0;
+            }
+            *operand2_method = 2;
+            *operand2 = getRegisterNumber(field, 2, 0);
+        } else {
+            fprintf(stderr, "Error: Indirect register addressing (method 2) not allowed for operation\n");
+            return 0;
+        }
+    /* Check if direct register addressing (3) and if it's allowed */
+    } else if((isRegisterName(field, 0, 0))) {
+        if(allow3) {
+            *operand2_method = 3;
+            *operand2 = getRegisterNumber(field, 1, 0);
+        } else {
+            fprintf(stderr, "Error: Direct register addressing (method 3) not allowed for operation\n");
+            return 0;
+        }
+    /* Check if direct addressing with symbol (1) and if it's allowed */
+    } else {
+        if(allow1) {
+            *operand2_method = 1;
+            /* operand1 = symbol / address of symbol */
+        } else {
+            fprintf(stderr, "Error: Direct addressing with symbol (method 1) not allowed for operation\n");
+            return 0;
+        }
+    }
+    return 1; /* Valid operand use */
+}
 
 /*
 Check if the operation receives the amount of operands it needs to receive.

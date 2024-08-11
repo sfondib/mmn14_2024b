@@ -4,8 +4,8 @@
 
 #define NUM_OPS 16
 
-int getFirstOperandData(char *field, int *operand1_method, int *operand1);
-int getSecondOperandData(char *field, int *operand2_method, int *operand2);
+int getFirstOperandData(char *field, int *operand1_method, int *operand1, int allow0, int allow1, int allow2, int allow3, int comma);
+int getSecondOperandData(char *field, int *operand2_method, int *operand2, int allow0, int allow1, int allow2, int allow3);
 int checkSymbolDefinition(char *first_field);
 int getDataStore(char *second_field);
 int getExternEntry(char *second_field);

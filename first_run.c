@@ -58,11 +58,15 @@ int main(int argc, char *argv[]) {
         while(fgets(file_line, 80, sfp)) {
             char_index = 0;
             is_symbol = 0;
+            operand1 = 0;
+            operand1_method = 0;
+            operand2 = 0;
+            operand2_method = 0;
 
             /* Initialize fields */
             initializeFields(&first_field, &second_field, &third_field, &fourth_field);
             sscanf(file_line, "%s %s %s %s", first_field, second_field, third_field, fourth_field);
-            printf("first: %s\nsecond: %s\nthird: %s\nfourth: %s\n", first_field, second_field, third_field, fourth_field);
+            printf("f1: %s\nf2: %s\nf3: %s\nf4: %s\n", first_field, second_field, third_field, fourth_field);
 
             /* Is symbol definition */
             if(!(is_symbol = checkSymbolDefinition(first_field))) {
@@ -109,63 +113,41 @@ int main(int argc, char *argv[]) {
                     case 2:
                     case 3:
                         /* First operand */
-                        if(!getFirstOperandData(second_field, &operand1_method, &operand1)) {
+                        if(!getFirstOperandData(second_field, &operand1_method, &operand1, 1, 1, 1, 1, 1)) {
                            continue; 
                         }
                         /* Second operand */
-                        if(!getSecondOperandData(third_field, &operand2_method, &operand2)) {
+                        if(!getSecondOperandData(third_field, &operand2_method, &operand2, 0, 1, 1, 1)) {
                             continue;
                         }
                         break;
-                        /*
-                        TO MAKE THE FUNCTIONS GENERAL FOR ALL CASES
-
-                        MAKE OUTER if STATEMENTS THAT CHECK EACH CASE REGULARLY (MEANING # AT START FOR IMMEDIATE,
-                        * AT START FOR INDIRECT AND SO ON) AND INNER LOOP TO CHECK IF IT'S EVEN ALLOWED FOR THAT
-                        CASE, IF NOT RETURN AN ERROR, IF IT IS ALLOWE CONTINUE EXECUTING NORMALLY
-                        
-                        SOMETHING LIKE THIS:
-                        int getFirstOperandData(char *field, int *operand1_method, int *operand1, int allow1, int allow2, int allow3, int allow4) {
-                            if(starts with #) {
-                                if(allowed) {
-                                    do something
-                                } else {
-                                    error
-                                }
-                            } else if(starts with *) {
-                                if(allowed) {
-                                    do something
-                                } else {
-                                    error
-                                }
-                            } else if(isRegisterName()) {
-                                if(allowed) {
-                                    dp something
-                                } else {
-                                    error
-                                }
-                            } else {
-                                if(allowed) {
-                                    do something
-                                } else {
-                                    error
-                                }
-                            } 
-                        }
-
-                        THIS WAY THERE WILL BE NO NEED TO CREATE MANY SIMILAR FUNCTIONS FOR THE DIFFERENT CASES
-                        */
                     /*
                     Source: 0,1,2,3
                     Dest:   0,1,2,3
                     */
                     case 1:
+                        /* First operand */
+                        if(!getFirstOperandData(second_field, &operand1_method, &operand1, 1, 1, 1, 1, 1)) {
+                           continue; 
+                        }
+                        /* Second operand */
+                        if(!getSecondOperandData(third_field, &operand2_method, &operand2, 1, 1, 1, 1)) {
+                            continue;
+                        }
                         break;
                     /*
                     Source:   1
                     Dest:     1,2,3
                     */
                     case 4:
+                        /* First operand */
+                        if(!getFirstOperandData(second_field, &operand1_method, &operand1, 0, 1, 0, 0, 1)) {
+                           continue; 
+                        }
+                        /* Second operand */
+                        if(!getSecondOperandData(third_field, &operand2_method, &operand2, 0, 1, 1, 1)) {
+                            continue;
+                        }
                         break;
                     /*
                     Source: Non
@@ -176,6 +158,10 @@ int main(int argc, char *argv[]) {
                     case 7:
                     case 8:
                     case 11:
+                        /* First operand */
+                        if(!getFirstOperandData(second_field, &operand1_method, &operand1, 0, 1, 1, 1, 0)) {
+                           continue; 
+                        }
                         break;
                     /*
                     Source: Non
@@ -184,12 +170,20 @@ int main(int argc, char *argv[]) {
                     case 9:
                     case 10:
                     case 13:
+                        /* First operand */
+                        if(!getFirstOperandData(second_field, &operand1_method, &operand1, 0, 1, 1, 0, 0)) {
+                           continue; 
+                        }
                         break;
                     /*
                     Source: Non
                     Dest:   0,1,2,3
                     */
                     case 12:
+                        /* First operand */
+                        if(!getFirstOperandData(second_field, &operand1_method, &operand1, 0, 1, 1, 1, 0)) {
+                           continue; 
+                        }
                         break;
                     /*
                     Source: Non
@@ -199,7 +193,9 @@ int main(int argc, char *argv[]) {
                     case 15:
                         break;
                 }
-                
+
+                printf("op1: %d\top1_method: %d\nop2: %d\top2_method: %d\n", operand1, operand1_method, operand2, operand2_method);
+            
             /* There is no symbol, analyze rest of instruction (first_field, second_field, third_field, fourth_field is error)
             This needs to have .data or .string or .extern or .entry*/
             } else if(is_symbol == 3) {
