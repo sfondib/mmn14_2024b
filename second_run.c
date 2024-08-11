@@ -80,7 +80,7 @@ bool lineIndexPass(line_info line, long *ic, table *symbol_table) {
                     return FALSE;
                 }
                 /* Add the symbol to the table with the ENTRY_SYMBOL type */
-                add_item_to_table(symbol_table, item->value, ptr, ENTRY_SYMBOL);
+                addItemToTable(symbol_table, item->value, ptr, ENTRY_SYMBOL);
             }
         }
         return TRUE;  /* Return to step 2 */
