@@ -41,7 +41,7 @@ void addItemToTable(table *tbl, long value, char *item, symbol_type type);
  * @param to_add - the value to add if type and value matches
  * @param type - the type of symbols that should be add
  */
-void addValueIfType_match(table tab, long to_add, symbol_type type);
+void addValueIfTypeMatch(table tab, long to_add, symbol_type type);
 
 /**
  * Release all memory related to the table
