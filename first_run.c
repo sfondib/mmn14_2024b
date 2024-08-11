@@ -86,8 +86,10 @@ int main(int argc, char *argv[]) {
                 continue;
             }
 
-            /* There is a symbol, analyze rest of instruction (second_field, third_field, fourth_field, text after is error)
-            This can be anything, operation, .data, .string, .extern, .entry */
+            /*
+            There is a symbol, analyze rest of instruction (second_field, third_field, fourth_field, text after is error)
+            This can be anything, operation, .data, .string, .extern, .entry
+            */
             if(!is_symbol) {
                 op_index = getOperation(second_field);
                 data_string = getDataStore(second_field);
@@ -96,108 +98,28 @@ int main(int argc, char *argv[]) {
                     continue;
                 }
 
-            /* There is no symbol, analyze rest of instruction (first_field, second_field, third_field, fourth_field is error)
-            This needs to be a normal operation */
-            } else if(is_symbol == 1){
-                op_index = getOperation(first_field);
-                if(validateOperandCount(op_index, second_field, third_field, fourth_field)) {
+            /*
+            There is no symbol, analyze rest of instruction (first_field, second_field, third_field, fourth_field is error)
+            This needs to be a normal operation
+            */
+            } else if(is_symbol == 1) {
+
+                op_index = getOperation(first_field); /* Get the index matching to the operation */
+
+                /* Validate the number of operands passed matches the operation */
+                if(validateOperandCount(op_index, second_field, third_field, fourth_field))
                     continue;
-                }
+
                 /* Get operands and addressing type for each */
-                switch(op_index) {
-                    /*
-                    Source: 0,1,2,3
-                    Dest:     1,2,3
-                    */
-                    case 0:
-                    case 2:
-                    case 3:
-                        /* First operand */
-                        if(!getFirstOperandData(second_field, &operand1_method, &operand1, 1, 1, 1, 1, 1)) {
-                           continue; 
-                        }
-                        /* Second operand */
-                        if(!getSecondOperandData(third_field, &operand2_method, &operand2, 0, 1, 1, 1)) {
-                            continue;
-                        }
-                        break;
-                    /*
-                    Source: 0,1,2,3
-                    Dest:   0,1,2,3
-                    */
-                    case 1:
-                        /* First operand */
-                        if(!getFirstOperandData(second_field, &operand1_method, &operand1, 1, 1, 1, 1, 1)) {
-                           continue; 
-                        }
-                        /* Second operand */
-                        if(!getSecondOperandData(third_field, &operand2_method, &operand2, 1, 1, 1, 1)) {
-                            continue;
-                        }
-                        break;
-                    /*
-                    Source:   1
-                    Dest:     1,2,3
-                    */
-                    case 4:
-                        /* First operand */
-                        if(!getFirstOperandData(second_field, &operand1_method, &operand1, 0, 1, 0, 0, 1)) {
-                           continue; 
-                        }
-                        /* Second operand */
-                        if(!getSecondOperandData(third_field, &operand2_method, &operand2, 0, 1, 1, 1)) {
-                            continue;
-                        }
-                        break;
-                    /*
-                    Source: Non
-                    Dest:     1,2,3
-                    */
-                    case 5:
-                    case 6:
-                    case 7:
-                    case 8:
-                    case 11:
-                        /* First operand */
-                        if(!getFirstOperandData(second_field, &operand1_method, &operand1, 0, 1, 1, 1, 0)) {
-                           continue; 
-                        }
-                        break;
-                    /*
-                    Source: Non
-                    Dest:     1,2
-                    */
-                    case 9:
-                    case 10:
-                    case 13:
-                        /* First operand */
-                        if(!getFirstOperandData(second_field, &operand1_method, &operand1, 0, 1, 1, 0, 0)) {
-                           continue; 
-                        }
-                        break;
-                    /*
-                    Source: Non
-                    Dest:   0,1,2,3
-                    */
-                    case 12:
-                        /* First operand */
-                        if(!getFirstOperandData(second_field, &operand1_method, &operand1, 0, 1, 1, 1, 0)) {
-                           continue; 
-                        }
-                        break;
-                    /*
-                    Source: Non
-                    Dest:   Non
-                    */
-                    case 14:
-                    case 15:
-                        break;
-                }
+                if(!getOperandsFromInstruction(op_index, second_field, third_field, &operand1, &operand2, &operand1_method, &operand2_method))
+                    continue;
 
                 printf("op1: %d\top1_method: %d\nop2: %d\top2_method: %d\n", operand1, operand1_method, operand2, operand2_method);
             
-            /* There is no symbol, analyze rest of instruction (first_field, second_field, third_field, fourth_field is error)
-            This needs to have .data or .string or .extern or .entry*/
+            /*
+            There is no symbol, analyze rest of instruction (first_field, second_field, third_field, fourth_field is error)
+            This needs to have .data or .string or .extern or .entry
+            */
             } else if(is_symbol == 3) {
                 if(!(strcmp(first_field, ".data")) || !(strcmp(first_field, ".string"))) {
                     ;

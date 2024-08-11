@@ -44,6 +44,110 @@ char *register_names[] = {
 };
 
 /*
+Check which instruction it is (how many operands it accepts) and check their addressing type.
+If an addressing method that does not match the type is used, an error is printed.
+@param op_index Index representing the operation
+@param *second_field Field holding the first operand
+@param *third_field Field holding the second operand
+@param *operand1 To hold the value of the first operand
+@param *operand2 To hold the value of the second operand
+@param *operand1_method To hold the value representing the addressing method of the first operand
+@param *operand1_method To hold the value representing the addressing method of the second operand
+*/
+int getOperandsFromInstruction(int op_index, char *field1, char *field2, int *operand1, int *operand2, int *operand1_method, int *operand2_method) {
+    switch(op_index) {
+        /*
+        Source: 0,1,2,3
+        Dest:     1,2,3
+        */
+        case 0:
+        case 2:
+        case 3:
+            /* First operand */
+            if(!getFirstOperandData(field1, operand1_method, operand1, 1, 1, 1, 1, 1)) {
+                return 0;
+            }
+            /* Second operand */
+            if(!getSecondOperandData(field2, operand2_method, operand2, 0, 1, 1, 1)) {
+                return 0;
+            }
+            break;
+        /*
+        Source: 0,1,2,3
+        Dest:   0,1,2,3
+        */
+        case 1:
+            /* First operand */
+            if(!getFirstOperandData(field1, operand1_method, operand1, 1, 1, 1, 1, 1)) {
+                return 0;
+            }
+            /* Second operand */
+            if(!getSecondOperandData(field2, operand2_method, operand2, 1, 1, 1, 1)) {
+                return 0;
+            }
+            break;
+        /*
+        Source:   1
+        Dest:     1,2,3
+        */
+        case 4:
+            /* First operand */
+            if(!getFirstOperandData(field1, operand1_method, operand1, 0, 1, 0, 0, 1)) {
+                return 0;
+            }
+            /* Second operand */
+            if(!getSecondOperandData(field2, operand2_method, operand2, 0, 1, 1, 1)) {
+                return 0;
+            }
+            break;
+        /*
+        Source: Non
+        Dest:     1,2,3
+        */
+        case 5:
+        case 6:
+        case 7:
+        case 8:
+        case 11:
+            /* First operand */
+            if(!getFirstOperandData(field1, operand1_method, operand1, 0, 1, 1, 1, 0)) {
+                return 0;
+            }
+            break;
+        /*
+        Source: Non
+        Dest:     1,2
+        */
+        case 9:
+        case 10:
+        case 13:
+            /* First operand */
+            if(!getFirstOperandData(field1, operand1_method, operand1, 0, 1, 1, 0, 0)) {
+                return 0;
+            }
+            break;
+        /*
+        Source: Non
+        Dest:   0,1,2,3
+        */
+        case 12:
+            /* First operand */
+            if(!getFirstOperandData(field1, operand1_method, operand1, 0, 1, 1, 1, 0)) {
+                return 0;
+            }
+            break;
+        /*
+        Source: Non
+        Dest:   Non
+        */
+        case 14:
+        case 15:
+            break;
+    }
+    return 1;
+}
+
+/*
 Get the data from the first operand (The addressing method and value)
 @param *field The field holding the operand
 @param *operand1_method To hold the value representing the addressing method
