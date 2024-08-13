@@ -454,3 +454,14 @@ int getOperation(char *field) {
     }
     return -1;
 }
+
+void decToBin15(int num, char* binary_str) {
+    int i;
+
+    binary_str[15] = '\0';
+
+    for (i = 14; i >= 0; i--) {
+        binary_str[i] = (num & 1) ? '1' : '0';
+        num >>= 1;
+    }
+}

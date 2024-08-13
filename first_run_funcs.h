@@ -4,6 +4,7 @@
 
 #define NUM_OPS 16
 
+void decToBin15(int num, char* binary_str);
 int getOperandsFromInstruction(int op_index, char *second_field, char *third_field, int *operand1, int *operand2, int *operand1_method, int *operand2_method);
 int getFirstOperandData(char *field, int *operand1_method, int *operand1, int allow0, int allow1, int allow2, int allow3, int comma);
 int getSecondOperandData(char *field, int *operand2_method, int *operand2, int allow0, int allow1, int allow2, int allow3);
