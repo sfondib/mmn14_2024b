@@ -425,6 +425,27 @@ int getDataStore(char *second_field) {
     return 0;
 }
 
+void processTokens(char *file_line, int *dc, int *dc_error, instruction *memory) {
+    char *token;
+    char binary_str[16];
+
+    token = strtok(file_line, " ");
+    token = strtok(NULL, " ");
+
+    while(token != NULL) {
+        if(*dc >= 100) {
+            fprintf(stderr, "Error: Data overflow error, DC counter exceeding 100\n");
+            *dc_error = 1;
+            break;
+        }
+        memory[(*dc)++].full = atoi(token);
+        decToBin15(memory[*dc - 1].full, binary_str);
+        printf("memory[%d] is %d in decimal and %s in binary\n", *dc - 1, memory[*dc - 1].full, binary_str);
+        token = strtok(NULL, ", ");
+    }
+}
+
+
 /*
 Check if there is an instruction for .extern or .entry
 It can be the first field or second field in the line

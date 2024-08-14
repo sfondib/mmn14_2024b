@@ -2,7 +2,30 @@
 #define NULL ((void*)0)
 #endif
 
-#define NUM_OPS 16
+#define NUM_OPS     16
+#define MAX_VAL_15  16383
+#define MIN_VAL_15  -16384
+#define MAX_VAL_DC  100
+#define MAX_VAL_IC  4096
+
+typedef struct {
+    int are       : 3;
+    int add_dest  : 4;
+    int add_src   : 4;
+    int op_code   : 4;
+} bword4;
+
+typedef struct {
+    int are       : 3;
+    int add_share : 8;
+    int op_code   : 4;
+} bword3;
+
+typedef union {
+    bword4 fields4;
+    bword3 fields3;
+    int full : 15;
+} instruction;
 
 void decToBin15(int num, char* binary_str);
 int getOperandsFromInstruction(int op_index, char *second_field, char *third_field, int *operand1, int *operand2, int *operand1_method, int *operand2_method);

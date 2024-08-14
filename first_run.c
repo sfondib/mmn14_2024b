@@ -9,25 +9,6 @@
 #pragma GCC diagnostic ignored "-Wunused-variable"
 #pragma GCC diagnostic ignored "-Wunused-but-set-variable"
 
-typedef struct {
-    int are       : 3;
-    int add_dest  : 4;
-    int add_src   : 4;
-    int op_code   : 4;
-} bword4;
-
-typedef struct {
-    int are       : 3;
-    int add_share : 8;
-    int op_code   : 4;
-} bword3;
-
-typedef union {
-    bword4 fields4;
-    bword3 fields3;
-    int full : 15;
-} instruction;
-
 /*
 When first_run.c is done, convert main to a regular function that accepts all the
 necessary parameters because everything goes through assembler.c and not first_run.c
@@ -39,17 +20,17 @@ int main(int argc, char *argv[]) {
     int line_index;
     int op_index;
     int is_symbol;
+    int data_string;
     int ic;
     int dc;
     int ic_error;
     int dc_error;
-    int char_index;
-    int data_string; /* 0 for data, 1 for string */
-    int ext_ent; /* 0 for extern, 1 for entry */
     int operand1;
     int operand2;
     int operand1_method; /* 0 - Immediate, 1 - Direct, 2 - Indirect register, 3 - Direct register */
     int operand2_method;
+    int i;
+    int j;
 
     char *first_field = NULL; /* Max length 31 */
     char *second_field = NULL;
@@ -61,9 +42,6 @@ int main(int argc, char *argv[]) {
     char binary_str[16];
 
     instruction memory[4096];
-    instruction inst1; /* First translated instruction word */
-    instruction inst2; /* Second translated instruction word */
-    instruction inst3; /* Third translated instruction word */
 
     if(argc < 2) {
         fprintf(stderr, "No files passed as arguments.\n");
@@ -84,7 +62,6 @@ int main(int argc, char *argv[]) {
         }
 
         while(fgets(file_line, 80, sfp)) {
-            char_index = 0;
             is_symbol = 0;
             operand1 = 0;
             operand1_method = 0;
@@ -156,22 +133,61 @@ int main(int argc, char *argv[]) {
                     token = strtok(file_line, " ");
                     token = strtok(NULL, " ");
 
-                    /* Read each number and put in memory using DC counter */
+                    /* Read each number */
                     while(token != NULL) {
                         /* Check for DC overflow error (>= 100 is for instruction) */
-                        if(dc >= 100) {
+                        if(dc >= MAX_VAL_DC) {
                             fprintf(stderr, "Error: Data overflow error, DC counter exceeding 100\n");
                             dc_error = 1;
                             break;
                         }
-                        memory[dc++].full = atoi(token);
+                        /* Check if what is after .data is a number */
+                        for(j = 0; j < strlen(token) - 1; j++) {
+                            /* Ignore the minus sign */
+                            if(token[j] == '-')
+                                continue;
+                            /* Non-digit character found */
+                            if(!isdigit(token[j])) {
+                                fprintf(stderr, "Non-number sequence after .data\n");
+                                dc_error = 1;
+                                break;
+                            }
+                        }
+                        /* Error, continue to next line */
+                        if(dc_error)
+                            continue;
+                        /* For 15 bits, minimum value is -16384 and maximum value is 16383 */
+                        if((atoi(token) < MIN_VAL_15) || (atoi(token) > MAX_VAL_15)) {
+                            fprintf(stderr, "Error: Maximum or minimum allowe value exceeded\n");
+                            dc_error = 1;
+                            break;
+                        }
+                        memory[dc++].full = atoi(token); /*  Save number in memory using DC counter */
                         token = strtok(NULL, ", ");
                     }
-                    if(dc_error) {
+                    /* Error, continue to next line */
+                    if(dc_error)
+                        continue;
+                /* Chec if .string instruction */
+                } else if(!strcmp(first_field, ".string")) {
+                    /* Doesn't start or end with " */
+                    if(!(second_field[0] == '\"') || !(second_field[strlen(second_field) - 1] == '\"')) {
+                        fprintf(stderr, "Error: Non-string sequence after .string\n");
                         continue;
                     }
-                } else if(!strcmp(first_field, ".string")) {
-                    ;
+                    /* Read each character in the string */
+                    for(i = 1; i < strlen(second_field) - 1; i++) {
+                        /* Check for DC overflow error (>= 100 is for instruction) */
+                        if(dc >= MAX_VAL_DC) {
+                            fprintf(stderr, "Error: Data overflow error, DC counter exceeding 100\n");
+                            dc_error = 1;
+                            break;
+                        }
+                        memory[dc++].full = (int)second_field[i]; /*  Save number in memory using DC counter */
+                    }
+                    /* Error, continue to next line */
+                    if(dc_error)
+                        continue;
                 } else if(!strcmp(first_field, ".extern")) {
                     ;
                 } else if(!strcmp(first_field, ".entry")) {
