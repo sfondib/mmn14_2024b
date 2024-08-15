@@ -3,28 +3,62 @@
 #endif
 
 #define NUM_OPS     16
-#define MAX_VAL_15  16383
-#define MIN_VAL_15  -16384
+#define MAX_VAL_15  16383   /* -2¹⁴ - 1 */
+#define MIN_VAL_15  -16384  /* -2¹⁴ */
 #define MAX_VAL_DC  100
 #define MAX_VAL_IC  4096
 
+/*
+4 fields:
+ARE                     - 3 bits
+Addressing destination  - 4 bits
+Addressing source       - 4 bits
+Operation code          - 4 bits
+*/
 typedef struct {
-    int are       : 3;
-    int add_dest  : 4;
-    int add_src   : 4;
-    int op_code   : 4;
+    unsigned int are         : 3;
+    unsigned int add_dest    : 4;
+    unsigned int add_src     : 4;
+    unsigned int op_code     : 4;
 } bword4;
 
+/*
+3 fields:
+ARE                     - 3 bits
+Addressing shared 1     - 3 bits (Shared between destination and source)
+Addressing shared 2     - 3 bits (Shared between destination and source)
+Blank                   - 2 bits (Not used)
+Operation code          - 4 bits
+*/
 typedef struct {
-    int are       : 3;
-    int add_share : 8;
-    int op_code   : 4;
-} bword3;
+    unsigned int are         : 3;
+    unsigned int add_share1  : 3;
+    unsigned int add_share2  : 3;
+    unsigned int blank       : 2;
+    unsigned int op_code     : 4;
+} bword5;
 
+/*
+2 fields:
+ARE                     - 3 bits
+Operand                 - 12 bits (The value of the operand itself)
+*/
+typedef struct {
+    unsigned int are         : 3;
+    int operand              : 12;
+} bword2;
+
+/*
+3 kinds:
+fields4                 - 4 fields
+fields 3                - 3 fields
+full                    - 15 bits (1 field for when saving numbers for .data and characters for .string)
+*/
 typedef union {
     bword4 fields4;
-    bword3 fields3;
-    int full : 15;
+    bword5 fields5;
+    bword2 fields2;
+    int full        : 15;
 } instruction;
 
 void decToBin15(int num, char* binary_str);

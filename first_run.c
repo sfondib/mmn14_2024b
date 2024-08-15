@@ -121,7 +121,71 @@ int main(int argc, char *argv[]) {
                 if(!getOperandsFromInstruction(op_index, second_field, third_field, &operand1, &operand2, &operand1_method, &operand2_method))
                     continue;
 
-                printf("op1: %d\top1_method: %d\nop2: %d\top2_method: %d\n", operand1, operand1_method, operand2, operand2_method);
+                /* Add first word to memory */
+                memory[100 + ic].fields4.are = 4;
+                memory[100 + ic].fields4.add_dest = operand2_method;
+                memory[100 + ic].fields4.add_src = operand1_method;
+                memory[100 + ic++].fields4.op_code = op_index;
+                decToBin15(memory[100 + ic - 1].full, binary_str);
+                printf("converted 1st: %s\n", binary_str);
+                /* Add second word to memory */
+                if(operand1_method == 1) {
+                    memory[100 + ic].fields2.are = 4;
+                    memory[100 + ic++].fields2.operand = operand1;
+                } else if(operand1_method == 2) {
+                    memory[100 + ic++].full = -1;
+                } else if(operand1_method == 4) {
+                    memory[100 + ic].fields5.are = 4;
+                    memory[100 + ic].fields5.add_share1 = operand1;
+                    memory[100 + ic].fields5.add_share2 = 0;
+                    memory[100 + ic].fields5.blank = 0;
+                    memory[100 + ic++].fields5.op_code = 0;
+                } else if(operand1_method == 8) {
+                    memory[100 + ic].fields5.are = 4;
+                    memory[100 + ic].fields5.add_share1 = 0;
+                    memory[100 + ic].fields5.add_share2 = operand1;
+                    memory[100 + ic].fields5.blank = 0;
+                    memory[100 + ic++].fields5.op_code = 0;
+                }
+                
+                /* Check shared word for addressing methods 2 and 3 */
+                if(operand1_method == operand2_method) {
+                    memory[100 + ic - 1].fields5.are = 4;
+                    memory[100 + ic - 1].fields5.add_share1 = operand2;
+                    memory[100 + ic - 1].fields5.add_share2 = operand1;
+                    memory[100 + ic - 1].fields5.blank = 0;
+                    memory[1100 + ic - 1].fields5.op_code = 0;
+                    decToBin15(memory[100 + ic - 1].full, binary_str);
+                    printf("converted 2nd: %s\n", binary_str);
+                    putchar('\n');
+                    continue;
+                } else {
+                    decToBin15(memory[100 + ic - 1].full, binary_str);
+                    printf("converted 2nd: %s\n", binary_str);
+                }
+
+                /* Add third word to memory */
+                if(operand2_method == 1) {
+                    memory[100 + ic].fields2.are = 4;
+                    memory[100 + ic++].fields2.operand = operand2;
+                } else if(operand2_method == 2) {
+                    memory[100 + ic++].full = -1;
+                } else if(operand2_method == 4) {
+                    memory[100 + ic].fields5.are = 4;
+                    memory[100 + ic].fields5.add_share1 = operand2;
+                    memory[100 + ic].fields5.add_share2 = 0;
+                    memory[100 + ic].fields5.blank = 0;
+                    memory[100 + ic++].fields5.op_code = 0;
+                } else if(operand2_method == 8) {
+                    memory[100 + ic].fields5.are = 4;
+                    memory[100 + ic].fields5.add_share1 = 0;
+                    memory[100 + ic].fields5.add_share2 = operand2;
+                    memory[100 + ic].fields5.blank = 0;
+                    memory[100 + ic++].fields5.op_code = 0;
+                }
+                decToBin15(memory[100 + ic - 1].full, binary_str);
+                printf("converted 3rd: %s\n", binary_str);
+                
             
             /*
             There is no symbol, analyze rest of instruction (first_field, second_field, third_field, fourth_field is error)
@@ -183,7 +247,7 @@ int main(int argc, char *argv[]) {
                             dc_error = 1;
                             break;
                         }
-                        memory[dc++].full = (int)second_field[i]; /*  Save number in memory using DC counter */
+                        memory[dc++].full = (int)second_field[i]; /*  Save each character in memory in order */
                     }
                     /* Error, continue to next line */
                     if(dc_error)
