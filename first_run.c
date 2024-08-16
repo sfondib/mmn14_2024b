@@ -10,10 +10,10 @@
 #pragma GCC diagnostic ignored "-Wunused-but-set-variable"
 
 /*
-When first_run.c is done, convert main to a regular function that accepts all the
+When first_run.c is done, convert firstRun to a regular function that accepts all the
 necessary parameters because everything goes through assembler.c and not first_run.c
 */
-int main(int argc, char *argv[]) {
+int firstRun(int argc, char *argv[]) {
     FILE *sfp; /* Source file pointer */
 
     int file_index = 1;
@@ -37,11 +37,11 @@ int main(int argc, char *argv[]) {
     char *third_field = NULL;
     char *fourth_field = NULL;
     char file_name_read[256];
-    char file_line[80];
+    char file_line[MAX_LINE_LEN];
     char *token;
     char binary_str[16];
 
-    instruction memory[4096];
+    instruction memory[MAX_VAL_IC];
 
     if(argc < 2) {
         fprintf(stderr, "No files passed as arguments.\n");
@@ -61,14 +61,14 @@ int main(int argc, char *argv[]) {
             continue; /* Move to next file */
         }
 
-        while(fgets(file_line, 80, sfp)) {
-            is_symbol = 0;
-            operand1 = 0;
-            operand1_method = 0;
-            operand2 = 0;
-            operand2_method = 0;
-            ic_error = 0;
-            dc_error = 0;
+        while(fgets(file_line, MAX_LINE_LEN, sfp)) {
+            is_symbol = ZEROIZE;
+            operand1 = ZEROIZE;
+            operand1_method = ZEROIZE;
+            operand2 = ZEROIZE;
+            operand2_method = ZEROIZE;
+            ic_error = ZEROIZE;
+            dc_error = ZEROIZE;
 
             /* Initialize fields */
             initializeFields(&first_field, &second_field, &third_field, &fourth_field);
@@ -122,68 +122,68 @@ int main(int argc, char *argv[]) {
                     continue;
 
                 /* Add first word to memory */
-                memory[100 + ic].fields4.are = 4;
-                memory[100 + ic].fields4.add_dest = operand2_method;
-                memory[100 + ic].fields4.add_src = operand1_method;
-                memory[100 + ic++].fields4.op_code = op_index;
-                decToBin15(memory[100 + ic - 1].full, binary_str);
+                memory[IC_START_VALUE + ic].fields4.are = 4;
+                memory[IC_START_VALUE + ic].fields4.add_dest = operand2_method;
+                memory[IC_START_VALUE + ic].fields4.add_src = operand1_method;
+                memory[IC_START_VALUE + ic++].fields4.op_code = op_index;
+                decToBin15(memory[IC_START_VALUE + ic - 1].full, binary_str);
                 printf("converted 1st: %s\n", binary_str);
                 /* Add second word to memory */
                 if(operand1_method == 1) {
-                    memory[100 + ic].fields2.are = 4;
-                    memory[100 + ic++].fields2.operand = operand1;
+                    memory[IC_START_VALUE + ic].fields2.are = 4;
+                    memory[IC_START_VALUE + ic++].fields2.operand = operand1;
                 } else if(operand1_method == 2) {
-                    memory[100 + ic++].full = -1;
+                    memory[IC_START_VALUE + ic++].full = -1;
                 } else if(operand1_method == 4) {
-                    memory[100 + ic].fields5.are = 4;
-                    memory[100 + ic].fields5.add_share1 = operand1;
-                    memory[100 + ic].fields5.add_share2 = 0;
-                    memory[100 + ic].fields5.blank = 0;
-                    memory[100 + ic++].fields5.op_code = 0;
+                    memory[IC_START_VALUE + ic].fields5.are = 4;
+                    memory[IC_START_VALUE + ic].fields5.add_share1 = operand1;
+                    memory[IC_START_VALUE + ic].fields5.add_share2 = 0;
+                    memory[IC_START_VALUE + ic].fields5.blank = 0;
+                    memory[IC_START_VALUE + ic++].fields5.op_code = 0;
                 } else if(operand1_method == 8) {
-                    memory[100 + ic].fields5.are = 4;
-                    memory[100 + ic].fields5.add_share1 = 0;
-                    memory[100 + ic].fields5.add_share2 = operand1;
-                    memory[100 + ic].fields5.blank = 0;
-                    memory[100 + ic++].fields5.op_code = 0;
+                    memory[IC_START_VALUE + ic].fields5.are = 4;
+                    memory[IC_START_VALUE + ic].fields5.add_share1 = 0;
+                    memory[IC_START_VALUE + ic].fields5.add_share2 = operand1;
+                    memory[IC_START_VALUE + ic].fields5.blank = 0;
+                    memory[IC_START_VALUE + ic++].fields5.op_code = 0;
                 }
                 
                 /* Check shared word for addressing methods 2 and 3 */
                 if(operand1_method == operand2_method) {
-                    memory[100 + ic - 1].fields5.are = 4;
-                    memory[100 + ic - 1].fields5.add_share1 = operand2;
-                    memory[100 + ic - 1].fields5.add_share2 = operand1;
-                    memory[100 + ic - 1].fields5.blank = 0;
-                    memory[1100 + ic - 1].fields5.op_code = 0;
-                    decToBin15(memory[100 + ic - 1].full, binary_str);
+                    memory[IC_START_VALUE + ic - 1].fields5.are = 4;
+                    memory[IC_START_VALUE + ic - 1].fields5.add_share1 = operand2;
+                    memory[IC_START_VALUE + ic - 1].fields5.add_share2 = operand1;
+                    memory[IC_START_VALUE + ic - 1].fields5.blank = 0;
+                    memory[IC_START_VALUE + ic - 1].fields5.op_code = 0;
+                    decToBin15(memory[IC_START_VALUE + ic - 1].full, binary_str);
                     printf("converted 2nd: %s\n", binary_str);
                     putchar('\n');
                     continue;
                 } else {
-                    decToBin15(memory[100 + ic - 1].full, binary_str);
+                    decToBin15(memory[IC_START_VALUE + ic - 1].full, binary_str);
                     printf("converted 2nd: %s\n", binary_str);
                 }
 
                 /* Add third word to memory */
                 if(operand2_method == 1) {
-                    memory[100 + ic].fields2.are = 4;
-                    memory[100 + ic++].fields2.operand = operand2;
+                    memory[IC_START_VALUE + ic].fields2.are = 4;
+                    memory[IC_START_VALUE + ic++].fields2.operand = operand2;
                 } else if(operand2_method == 2) {
-                    memory[100 + ic++].full = -1;
+                    memory[IC_START_VALUE + ic++].full = -1;
                 } else if(operand2_method == 4) {
-                    memory[100 + ic].fields5.are = 4;
-                    memory[100 + ic].fields5.add_share1 = operand2;
-                    memory[100 + ic].fields5.add_share2 = 0;
-                    memory[100 + ic].fields5.blank = 0;
-                    memory[100 + ic++].fields5.op_code = 0;
+                    memory[IC_START_VALUE + ic].fields5.are = 4;
+                    memory[IC_START_VALUE + ic].fields5.add_share1 = operand2;
+                    memory[IC_START_VALUE + ic].fields5.add_share2 = 0;
+                    memory[IC_START_VALUE + ic].fields5.blank = 0;
+                    memory[IC_START_VALUE + ic++].fields5.op_code = 0;
                 } else if(operand2_method == 8) {
-                    memory[100 + ic].fields5.are = 4;
-                    memory[100 + ic].fields5.add_share1 = 0;
-                    memory[100 + ic].fields5.add_share2 = operand2;
-                    memory[100 + ic].fields5.blank = 0;
-                    memory[100 + ic++].fields5.op_code = 0;
+                    memory[IC_START_VALUE + ic].fields5.are = 4;
+                    memory[IC_START_VALUE + ic].fields5.add_share1 = 0;
+                    memory[IC_START_VALUE + ic].fields5.add_share2 = operand2;
+                    memory[IC_START_VALUE + ic].fields5.blank = 0;
+                    memory[IC_START_VALUE + ic++].fields5.op_code = 0;
                 }
-                decToBin15(memory[100 + ic - 1].full, binary_str);
+                decToBin15(memory[IC_START_VALUE + ic - 1].full, binary_str);
                 printf("converted 3rd: %s\n", binary_str);
                 
             
@@ -199,7 +199,7 @@ int main(int argc, char *argv[]) {
 
                     /* Read each number */
                     while(token != NULL) {
-                        /* Check for DC overflow error (>= 100 is for instruction) */
+                        /* Check for DC overflow error (>= IC_START_VALUE is for instruction) */
                         if(dc >= MAX_VAL_DC) {
                             fprintf(stderr, "Error: Data overflow error, DC counter exceeding 100\n");
                             dc_error = 1;
@@ -241,7 +241,7 @@ int main(int argc, char *argv[]) {
                     }
                     /* Read each character in the string */
                     for(i = 1; i < strlen(second_field) - 1; i++) {
-                        /* Check for DC overflow error (>= 100 is for instruction) */
+                        /* Check for DC overflow error (>= IC_START_VALUE is for instruction) */
                         if(dc >= MAX_VAL_DC) {
                             fprintf(stderr, "Error: Data overflow error, DC counter exceeding 100\n");
                             dc_error = 1;
