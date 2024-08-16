@@ -1,7 +1,7 @@
-#include<stdio.h>
-#include<string.h>
-#include<stdlib.h>
-#include<ctype.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <ctype.h>
 #include "my_macro.h"
 #include "pre_processor_funcs.h"
 
@@ -23,7 +23,7 @@ int main(int argc, char *argv[]) {
 	char *second_field = NULL;
 	char file_name_read[256];
 	char file_name_write[256];
-	char file_line[80];
+	char file_line[MAX_LINE_LEN];
 
 	if(argc < 2) {
 		fprintf(stderr, "Error: No files passed as arguments.\n");
@@ -31,7 +31,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	while(file_index < argc) {
-		line_index = 0;
+		line_index = ZEROIZE;
 
 		/* Open .as file to read from */
 		sprintf(file_name_read, "%s.as", argv[file_index]);
@@ -49,8 +49,8 @@ int main(int argc, char *argv[]) {
 		}
 
 		/* Read all lines in the file */
-		while(fgets(file_line, 80, asfp)) {
-			char_index = 0;
+		while(fgets(file_line, MAX_LINE_LEN, asfp)) {
+			char_index = ZEROIZE;
 			line_index++;
 
 			first_field = fieldInitialAlloc();
@@ -67,7 +67,7 @@ int main(int argc, char *argv[]) {
 			if(!strcmp(first_field, MACRO_START)) {
 				in_macro = 1;
 				/* Get the macro name */
-				MOVE_TO_NOT_WHITE(file_line, char_index);
+				jumpOnWhiteChar(file_line, char_index);
 				second_field = fieldInitialAlloc();
 				getFieldFromLine(&second_field, file_line, &char_index);
 				/* Perform checks to see if format for macro definition is valid */
