@@ -1,7 +1,7 @@
-#include<stdlib.h>
-#include<stdio.h>
-#include<string.h>
-#include<ctype.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
 #include "pre_processor_funcs.h"
 #include "my_macro.h"
 
@@ -115,7 +115,7 @@ int macroNameValidityCheck(macro_dw **head, char *macro_name, char *line, int in
 			return 3;
 	}
 	/* Extra characters after macro name in definition */
-	MOVE_TO_NOT_WHITE(line, index);
+	jumpOnWhiteChar(line, index);
 	if(line[index] != ' ' && line[index] != '\n' && line[index] != '\t' && line[index] != '\0')
 		return 4;
 	/* Redefinition of macro */
