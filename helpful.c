@@ -1,4 +1,8 @@
+#include <stdio.h>
+#include <stdarg.h>
 #include "helpful.h"
+#include "my_macro.h"
+#include "symbol_table.h"
 
 void *mallocCheck(long size) {
     void *ptr = malloc(size);
@@ -36,4 +40,18 @@ int isTypeMatching(table tbl, char *key, va_list arglist, int symbol_count) {
         }
     }
     return 0; /* No match found */
+}
+
+int calculateInstructionLength(int operand1_method, int operand2_method) {
+    int length = 1;  /* The base length of the instruction */
+
+    /* Each operand may add additional length to the instruction */
+    if (operand1_method != -1) {
+        length += 1;  /* One word for the first operand */
+    }
+    if (operand2_method != -1) {
+        length += 1;  /* One word for the second operand */
+    }
+
+    return length;
 }
