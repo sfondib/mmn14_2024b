@@ -1,4 +1,3 @@
-/* In helpful file we will find helpful functions that will take part in the whole program */
 #ifndef HELPFUL_H
 #define HELPFUL_H
 
@@ -7,7 +6,7 @@
 #include <string.h>
 #include <stdarg.h>
 #include "my_macro.h"
-#include "table.h"
+#include "symbol_table.h"
 
 /**
  * Allocates memory in required size, if process has been failed - exits the program
@@ -34,5 +33,13 @@ int printErrorAccordingToLine(line_info line, char *message, ...);
  * @return 1 if a match is found, 0 otherwise
  */
 int isTypeMatching(table tbl, char *key, va_list arglist, int symbol_count);
+
+/**
+ * Calculates the length of an instruction based on the addressing methods of the operands.
+ * @param operand1_method - Addressing method of the first operand.
+ * @param operand2_method - Addressing method of the second operand.
+ * @return The total length of the instruction in words.
+ */
+int calculateInstructionLength(int operand1_method, int operand2_method);
 
 #endif /* HELPFUL_H */
