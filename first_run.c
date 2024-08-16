@@ -13,7 +13,7 @@
 When first_run.c is done, convert firstRun to a regular function that accepts all the
 necessary parameters because everything goes through assembler.c and not first_run.c
 */
-int firstRun(int argc, char *argv[]) {
+int main(int argc, char *argv[]) {
     FILE *sfp; /* Source file pointer */
 
     int file_index = 1;
@@ -123,69 +123,80 @@ int firstRun(int argc, char *argv[]) {
 
                 /* Add first word to memory */
                 memory[IC_START_VALUE + ic].fields4.are = 4;
-                memory[IC_START_VALUE + ic].fields4.add_dest = operand2_method;
-                memory[IC_START_VALUE + ic].fields4.add_src = operand1_method;
+                /* If only one operand */
+                if(operand2_method == 0) {
+                    memory[IC_START_VALUE + ic].fields4.add_dest = operand1_method;
+                    memory[IC_START_VALUE + ic].fields4.add_src = 0;
+                /* If two operands */
+                } else {
+                    memory[IC_START_VALUE + ic].fields4.add_dest = operand2_method;
+                    memory[IC_START_VALUE + ic].fields4.add_src = operand1_method;
+                }
                 memory[IC_START_VALUE + ic++].fields4.op_code = op_index;
                 decToBin15(memory[IC_START_VALUE + ic - 1].full, binary_str);
-                printf("converted 1st: %s\n", binary_str);
+                printf("1st word: %s\n", binary_str);
+
                 /* Add second word to memory */
-                if(operand1_method == 1) {
-                    memory[IC_START_VALUE + ic].fields2.are = 4;
-                    memory[IC_START_VALUE + ic++].fields2.operand = operand1;
-                } else if(operand1_method == 2) {
-                    memory[IC_START_VALUE + ic++].full = -1;
-                } else if(operand1_method == 4) {
-                    memory[IC_START_VALUE + ic].fields5.are = 4;
-                    memory[IC_START_VALUE + ic].fields5.add_share1 = operand1;
-                    memory[IC_START_VALUE + ic].fields5.add_share2 = 0;
-                    memory[IC_START_VALUE + ic].fields5.blank = 0;
-                    memory[IC_START_VALUE + ic++].fields5.op_code = 0;
-                } else if(operand1_method == 8) {
-                    memory[IC_START_VALUE + ic].fields5.are = 4;
-                    memory[IC_START_VALUE + ic].fields5.add_share1 = 0;
-                    memory[IC_START_VALUE + ic].fields5.add_share2 = operand1;
-                    memory[IC_START_VALUE + ic].fields5.blank = 0;
-                    memory[IC_START_VALUE + ic++].fields5.op_code = 0;
-                }
-                
-                /* Check shared word for addressing methods 2 and 3 */
-                if(operand1_method == operand2_method) {
-                    memory[IC_START_VALUE + ic - 1].fields5.are = 4;
-                    memory[IC_START_VALUE + ic - 1].fields5.add_share1 = operand2;
-                    memory[IC_START_VALUE + ic - 1].fields5.add_share2 = operand1;
-                    memory[IC_START_VALUE + ic - 1].fields5.blank = 0;
-                    memory[IC_START_VALUE + ic - 1].fields5.op_code = 0;
-                    decToBin15(memory[IC_START_VALUE + ic - 1].full, binary_str);
-                    printf("converted 2nd: %s\n", binary_str);
-                    putchar('\n');
-                    continue;
-                } else {
-                    decToBin15(memory[IC_START_VALUE + ic - 1].full, binary_str);
-                    printf("converted 2nd: %s\n", binary_str);
+                if(operand1_method != 0) {
+                    if(operand1_method == 1) {
+                        memory[IC_START_VALUE + ic].fields2.are = 4;
+                        memory[IC_START_VALUE + ic++].fields2.operand = operand1;
+                    } else if(operand1_method == 2) {
+                        memory[IC_START_VALUE + ic++].full = -1;
+                    } else if(operand1_method == 4) {
+                        memory[IC_START_VALUE + ic].fields5.are = 4;
+                        memory[IC_START_VALUE + ic].fields5.add_share1 = 0;
+                        memory[IC_START_VALUE + ic].fields5.add_share2 = operand1;
+                        memory[IC_START_VALUE + ic].fields5.blank = 0;
+                        memory[IC_START_VALUE + ic++].fields5.op_code = 0;
+                    } else if(operand1_method == 8) {
+                        memory[IC_START_VALUE + ic].fields5.are = 4;
+                        memory[IC_START_VALUE + ic].fields5.add_share1 = operand1;
+                        memory[IC_START_VALUE + ic].fields5.add_share2 = 0;
+                        memory[IC_START_VALUE + ic].fields5.blank = 0;
+                        memory[IC_START_VALUE + ic++].fields5.op_code = 0;
+                    }
+
+                    /* Check shared word for addressing methods 2 and 3 */
+                    if(operand1_method == operand2_method) {
+                        memory[IC_START_VALUE + ic - 1].fields5.are = 4;
+                        memory[IC_START_VALUE + ic - 1].fields5.add_share1 = operand2;
+                        memory[IC_START_VALUE + ic - 1].fields5.add_share2 = operand1;
+                        memory[IC_START_VALUE + ic - 1].fields5.blank = 0;
+                        memory[IC_START_VALUE + ic - 1].fields5.op_code = 0;
+                        decToBin15(memory[IC_START_VALUE + ic - 1].full, binary_str);
+                        printf("2nd word: %s\n", binary_str);
+                        putchar('\n');
+                        continue;
+                    } else {
+                        decToBin15(memory[IC_START_VALUE + ic - 1].full, binary_str);
+                        printf("2nd word: %s\n", binary_str);
+                    }
                 }
 
-                /* Add third word to memory */
-                if(operand2_method == 1) {
-                    memory[IC_START_VALUE + ic].fields2.are = 4;
-                    memory[IC_START_VALUE + ic++].fields2.operand = operand2;
-                } else if(operand2_method == 2) {
-                    memory[IC_START_VALUE + ic++].full = -1;
-                } else if(operand2_method == 4) {
-                    memory[IC_START_VALUE + ic].fields5.are = 4;
-                    memory[IC_START_VALUE + ic].fields5.add_share1 = operand2;
-                    memory[IC_START_VALUE + ic].fields5.add_share2 = 0;
-                    memory[IC_START_VALUE + ic].fields5.blank = 0;
-                    memory[IC_START_VALUE + ic++].fields5.op_code = 0;
-                } else if(operand2_method == 8) {
-                    memory[IC_START_VALUE + ic].fields5.are = 4;
-                    memory[IC_START_VALUE + ic].fields5.add_share1 = 0;
-                    memory[IC_START_VALUE + ic].fields5.add_share2 = operand2;
-                    memory[IC_START_VALUE + ic].fields5.blank = 0;
-                    memory[IC_START_VALUE + ic++].fields5.op_code = 0;
+                if(operand2_method != 0) {
+                    /* Add third word to memory */
+                    if(operand2_method == 1) {
+                        memory[IC_START_VALUE + ic].fields2.are = 4;
+                        memory[IC_START_VALUE + ic++].fields2.operand = operand2;
+                    } else if(operand2_method == 2) {
+                        memory[IC_START_VALUE + ic++].full = -1;
+                    } else if(operand2_method == 4) {
+                        memory[IC_START_VALUE + ic].fields5.are = 4;
+                        memory[IC_START_VALUE + ic].fields5.add_share1 = operand2;
+                        memory[IC_START_VALUE + ic].fields5.add_share2 = 0;
+                        memory[IC_START_VALUE + ic].fields5.blank = 0;
+                        memory[IC_START_VALUE + ic++].fields5.op_code = 0;
+                    } else if(operand2_method == 8) {
+                        memory[IC_START_VALUE + ic].fields5.are = 4;
+                        memory[IC_START_VALUE + ic].fields5.add_share1 = operand2;
+                        memory[IC_START_VALUE + ic].fields5.add_share2 = 0;
+                        memory[IC_START_VALUE + ic].fields5.blank = 0;
+                        memory[IC_START_VALUE + ic++].fields5.op_code = 0;
+                    }
+                    decToBin15(memory[IC_START_VALUE + ic - 1].full, binary_str);
+                    printf("3rd word: %s\n", binary_str);
                 }
-                decToBin15(memory[IC_START_VALUE + ic - 1].full, binary_str);
-                printf("converted 3rd: %s\n", binary_str);
-                
             
             /*
             There is no symbol, analyze rest of instruction (first_field, second_field, third_field, fourth_field is error)
