@@ -7,6 +7,12 @@
 /* Maximum size of code image */
 #define CODE_IMG_MAX_LENGTH 1200
 
+#define NUM_OPS     16
+#define MAX_VAL_15  16383   /* -2¹⁴ - 1 */
+#define MIN_VAL_15  -16384  /* -2¹⁴ */
+#define MAX_VAL_DC  100
+#define MAX_VAL_IC  4096
+
 /* Macro rules */
 #define NUM_INVALID_MACRO_NAMES 20
 #define MACRO_START "macr"
