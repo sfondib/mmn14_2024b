@@ -29,7 +29,7 @@ typedef enum booleans {
 
 /* For both runs
    Moves the index to the next place in string where there is no white char */
-#define MOVE_TO_NOT_WHITE(string, index) \
+#define jumpOnWhiteChar(string, index) \
         for (;string[(index)] && (string[(index)] == '\t' || string[(index)] == ' '); (++(index))) \
         ;
 
@@ -41,11 +41,11 @@ typedef struct line_info {
 } line_info;
 
 /* Instruction type of data, extern, entry, string */
-typedef enum instruction {
+typedef enum directive {
     DATA_INST, /* data instruction */
     STRING_INST, /* string instruction */
     ENTRY_INST, /* entry instruction */
     EXTERN_INST /* extern instruction */
-} instruction;
+} directive;
 
 #endif /* MY_MACRO_H */
