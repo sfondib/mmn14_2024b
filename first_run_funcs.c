@@ -1,7 +1,7 @@
-#include<string.h>
-#include<ctype.h>
-#include<stdio.h>
-#include<stdlib.h>
+#include <string.h>
+#include <ctype.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include "pre_processor_funcs.h"
 #include "my_macro.h"
 #include "first_run_funcs.h"
@@ -433,7 +433,7 @@ void processTokens(char *file_line, int *dc, int *dc_error, instruction *memory)
     token = strtok(NULL, " ");
 
     while(token != NULL) {
-        if(*dc >= 100) {
+        if(*dc >= MAX_VAL_DC) {
             fprintf(stderr, "Error: Data overflow error, DC counter exceeding 100\n");
             *dc_error = 1;
             break;
