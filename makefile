@@ -1,19 +1,45 @@
-/* Basic compilation command: */
-CC = gcc # GCC Compiler
-CFLAGS = -ansi -Wall -pedantic
+# Makefile
 
-/* Main: */
-assembler.o: assembler.c
-	$(CC) -c assembler.c $(CFLAGS) -o assembler
+CC = gcc
+CFLAGS = -Wall -ansi -pedantic
 
-/* Code Helper Functions: */  #########for example#########
-code_helper.o: code_helper.c code_helper.h
-	$(CC) -c code_helper.c $(CFLAGS) -o code_helper
+# Object files
+OBJS = helpful.o pre_processor.o pre_processor_funcs.o first_run.o first_run_funcs.o second_run.o table.o
 
-/* First Run: */
-first_run.o: first_run.c first_run.h
-	$(CC) -c first_run.c $(CFLAGS) -o first_run
+# Output executable
+TARGET = assembler
 
-/* Second Run: */
-second_run.o: second_run.c second_run.h
-	$(CC) -c second_run.c $(CFLAGS) -o second_run
+# Default rule
+all: $(TARGET)
+
+# Rule to link object files and create the executable
+$(TARGET): $(OBJS)
+	$(CC) $(CFLAGS) -o $(TARGET) $(OBJS)
+
+# Rules to compile each .c file into a .o file
+helpful.o: helpful.c helpful.h
+	$(CC) $(CFLAGS) -c helpful.c -o helpful.o
+
+pre_processor.o: pre_processor.c pre_processor_funcs.h
+	$(CC) $(CFLAGS) -c pre_processor.c -o pre_processor.o
+
+pre_processor_funcs.o: pre_processor_funcs.c pre_processor_funcs.h
+	$(CC) $(CFLAGS) -c pre_processor_funcs.c -o pre_processor_funcs.o
+
+first_run.o: first_run.c first_run_funcs.h
+	$(CC) $(CFLAGS) -c first_run.c -o first_run.o
+
+first_run_funcs.o: first_run_funcs.c first_run_funcs.h
+	$(CC) $(CFLAGS) -c first_run_funcs.c -o first_run_funcs.o
+
+second_run.o: second_run.c second_run.h helpful.h
+	$(CC) $(CFLAGS) -c second_run.c -o second_run.o
+
+table.o: table.c table.h helpful.h
+	$(CC) $(CFLAGS) -c table.c -o table.o
+
+# Clean up object files and the executable
+clean:
+	rm -f $(OBJS) $(TARGET)
+
+.PHONY: all clean
