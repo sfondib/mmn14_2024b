@@ -11,16 +11,15 @@ bool lineIndexPass(line_info line, long *ic, table *symbol_table) {
     long charIndex = ZEROIZE;  /* Counter for line index */
     char *ptr;  /* Pointer for string operations */
     char *indexOfColon = NULL;  /* Pointer to locate a colon in the line */
+    int operand1_method = -1, operand2_method = -1;
 
-    /* Step 1: Initialize IC and check if the file passed the first run */
-    *ic = IC_START_VALUE;
     if (line.content == NULL) {
         /* Error: No content provided for processing */
         fprintf(stderr, "Error: No file content provided for processing.\n");
         return FALSE;
     }
     /* Skip initial whitespace characters */
-    MOVE_TO_NOT_WHITE(line.content, charIndex);
+    jumpOnWhiteChar(line.content, charIndex);
     
     /* Step 2: Read the next line from the source file. If end of file, go to step 9 */
     /* Check if the line is a comment or empty */
@@ -34,7 +33,7 @@ bool lineIndexPass(line_info line, long *ic, table *symbol_table) {
         charIndex++;  /* Move one index forward to skip the colon */
     }
     /* Skip any additional whitespace characters */
-    MOVE_TO_NOT_WHITE(line.content, charIndex);
+    jumpOnWhiteChar(line.content, charIndex);
     
     /* Step 4: Is it a .DATA, .STRING, or EXTERN directive? If yes, return to step 2 */
     if (line.content[charIndex] == '.') {
@@ -45,12 +44,12 @@ bool lineIndexPass(line_info line, long *ic, table *symbol_table) {
             return TRUE;  /* Return to step 2 */
         }
         /* Skip additional whitespace characters */
-        MOVE_TO_NOT_WHITE(line.content, charIndex);
+        jumpOnWhiteChar(line.content, charIndex);
         
         /* Step 5: Is it an ENTRY directive? If not, go to step 7 */
         if (strcmp(ptr, ".entry") == 0) {
             /* Skip to the next field after .entry */
-            MOVE_TO_NOT_WHITE(line.content, charIndex);
+            jumpOnWhiteChar(line.content, charIndex);
             ptr = strtok(NULL, " \n\t");
             
             /* Step 6: Mark the corresponding symbols in the symbol table with the .ENTRY attribute, then return to step 2 */
@@ -86,9 +85,14 @@ bool lineIndexPass(line_info line, long *ic, table *symbol_table) {
         return TRUE;  /* Return to step 2 */
     }
     
-    /* Step 7: need to complite */
+    /* Step 7: Encode the operands starting from the second word in the binary code of the instruction */
+    if (!encodeOperands(line, ic, symbol_table, &operand1_method, &operand2_method)) {
+        return FALSE;
+    }
 
-    return TRUE;  /* If no errors occurred, return TRUE */
+    /* Step 8: Update IC and return to step 2 */
+    *ic += calculateInstructionLength(operand1_method, operand2_method);
+    return TRUE;
 }
 
 /**
@@ -100,13 +104,13 @@ bool lineIndexPass(line_info line, long *ic, table *symbol_table) {
  */
 bool processFileSecondPass(FILE *file, const char *file_name, table *symbol_table) {
     char line_content[MAX_LINE_LEN];
-    long ic = IC_START_VALUE;  /* Step 1: Initialize IC */
+    long ic = IC_START_VALUE;  /* Initialize IC once at the beginning of processing */
     line_info current_line;
     int line_number = 0;
     bool success = TRUE;  /* Track if any errors occur during processing */
 
     /* Set the file name in the line_info structure */
-    current_line.file_name = (char *)file_name;
+    current_line.file_name = (char *)file_name;  /* Necessary for error reporting */
 
     /* Step 2: Read the next line from the source file. If end of file, go to step 9 */
     while (fgets(line_content, MAX_LINE_LEN, file) != NULL) {
@@ -128,5 +132,41 @@ bool processFileSecondPass(FILE *file, const char *file_name, table *symbol_tabl
         return FALSE;
     }
 
+    return TRUE;
+}
+
+/**
+ * Encodes the operands of an instruction during the second pass.
+ * @param line - The line information, including content, file name, and line number.
+ * @param ic - A pointer to the instruction counter.
+ * @param symbol_table - A pointer to the symbol table.
+ * @param operand1_method - Pointer to store the addressing method of the first operand.
+ * @param operand2_method - Pointer to store the addressing method of the second operand.
+ * @return TRUE if encoding is successful, FALSE if an error occurs.
+ */
+bool encodeOperands(line_info line, long *ic, table *symbol_table, int *operand1_method, int *operand2_method) {
+    int operand1, operand2;
+    char *token;
+    
+    /* Extract operands and methods from the line content */
+    token = strtok(line.content, " \t");
+    token = strtok(NULL, " \t"); /* Skip operation */
+    
+    /* First operand */
+    if (!getFirstOperandData(token, operand1_method, &operand1, TRUE, TRUE, TRUE, TRUE, FALSE)) {
+        printErrorAccordingToLine(line, "Error: Invalid first operand.");
+        return FALSE;
+    }
+    
+    token = strtok(NULL, " ,\t");
+    
+    /* Second operand */
+    if (token != NULL && !getSecondOperandData(token, operand2_method, &operand2, TRUE, TRUE, TRUE, TRUE)) {
+        printErrorAccordingToLine(line, "Error: Invalid second operand.");
+        return FALSE;
+    }
+    
+    /* Encoding logic based on operand methods and updating the instruction counter */
+    
     return TRUE;
 }
