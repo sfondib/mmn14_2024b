@@ -4,7 +4,7 @@ CC = gcc
 CFLAGS = -Wall -ansi -pedantic
 
 # Object files
-OBJS = helpful.o pre_processor.o pre_processor_funcs.o first_run.o first_run_funcs.o second_run.o table.o
+OBJS = helpful.o pre_processor.o pre_processor_funcs.o first_run.o first_run_funcs.o second_run.o symbol_table.o
 
 # Output executable
 TARGET = assembler
