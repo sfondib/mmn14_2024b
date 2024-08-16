@@ -35,8 +35,8 @@ first_run_funcs.o: first_run_funcs.c first_run_funcs.h
 second_run.o: second_run.c second_run.h helpful.h
 	$(CC) $(CFLAGS) -c second_run.c -o second_run.o
 
-table.o: table.c table.h helpful.h
-	$(CC) $(CFLAGS) -c table.c -o table.o
+symbol_table.o: symbol_table.c symbol_table.h helpful.h
+	$(CC) $(CFLAGS) -c symbol_table.c -o symbol_table.o
 
 # Clean up object files and the executable
 clean:
