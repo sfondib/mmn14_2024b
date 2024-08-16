@@ -2,12 +2,6 @@
 #define NULL ((void*)0)
 #endif
 
-#define NUM_OPS     16
-#define MAX_VAL_15  16383   /* -2¹⁴ - 1 */
-#define MIN_VAL_15  -16384  /* -2¹⁴ */
-#define MAX_VAL_DC  100
-#define MAX_VAL_IC  4096
-
 /*
 4 fields:
 ARE                     - 3 bits
