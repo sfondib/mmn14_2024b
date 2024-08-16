@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include "helpful.h"
 
 /* Pointer to table's entry */
 typedef struct item* table;
