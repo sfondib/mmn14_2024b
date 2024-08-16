@@ -1,5 +1,5 @@
 #include "helpful.h"
-#include "table.h"
+#include "symbol_table.h"
 
 void addItemToTable(table *tbl, long value, char *item, symbol_type type) {
     char *temp_item;
