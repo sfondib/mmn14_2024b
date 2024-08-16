@@ -1,5 +1,5 @@
-#ifndef TABLE_H
-#define TABLE_H
+#ifndef SYMBOL_TABLE_H
+#define SYMBOL_TABLE_H
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -59,4 +59,4 @@ void freeTableMemory(table tbl);
  */
 table_item *findType(table tbl, char *key, int symbol_count, ...);
 
-#endif /* TABLE_H */
+#endif /* SYMBOL_TABLE_H */
