@@ -1,7 +1,8 @@
-#include <string.h>
-#include <ctype.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include<string.h>
+#include<ctype.h>
+#include<stdio.h>
+#include<stdlib.h>
+#include<stdarg.h>
 #include "pre_processor_funcs.h"
 #include "my_macro.h"
 #include "first_run_funcs.h"
@@ -43,17 +44,21 @@ char *register_names[] = {
     "r7",
 };
 
-/*
-Check which instruction it is (how many operands it accepts) and check their addressing type.
-If an addressing method that does not match the type is used, an error is printed.
-@param op_index Index representing the operation
-@param *second_field Field holding the first operand
-@param *third_field Field holding the second operand
-@param *operand1 To hold the value of the first operand
-@param *operand2 To hold the value of the second operand
-@param *operand1_method To hold the value representing the addressing method of the first operand
-@param *operand1_method To hold the value representing the addressing method of the second operand
-*/
+void resetVars(int count, ...) {
+    int i;
+    int *var;
+    va_list args;
+
+    va_start(args, count);
+
+    for (i = 0; i < count; i++) {
+        var = va_arg(args, int*);
+        *var = ZEROIZE;
+    }
+
+    va_end(args);
+}
+
 int getOperandsFromInstruction(int op_index, char *field1, char *field2, int *operand1, int *operand2, int *operand1_method, int *operand2_method) {
     switch(op_index) {
         /*
@@ -147,17 +152,6 @@ int getOperandsFromInstruction(int op_index, char *field1, char *field2, int *op
     return 1;
 }
 
-/*
-Get the data from the first operand (The addressing method and value)
-@param *field The field holding the operand
-@param *operand1_method To hold the value representing the addressing method
-@param *operand1 To hold the value of the operand
-@param allow0 If addressing method 0 is allowed or not
-@param allow1 If addressing method 1 is allowed or not
-@param allow2 If addressing method 2 is allowed or not
-@param allow3 If addressing method 3 is allowed or not
-@return 1 for valid, 0 otherwise
-*/
 int getFirstOperandData(char *field, int *operand1_method, int *operand1, int allow0, int allow1, int allow2, int allow3, int comma) {
     /* Check if immediate addressing method (0) and if it's allowed */
     if(field[0] == '#') {
@@ -207,17 +201,6 @@ int getFirstOperandData(char *field, int *operand1_method, int *operand1, int al
     return 1; /* Valid operand use */
 }
 
-/*
-Get the data from the first operand (The addressing method and value)
-@param *field The field holding the operand
-@param *operand1_method To hold the value representing the addressing method
-@param *operand1 To hold the value of the operand
-@param allow0 If addressing method 0 is allowed or not
-@param allow1 If addressing method 1 is allowed or not
-@param allow2 If addressing method 2 is allowed or not
-@param allow3 If addressing method 3 is allowed or not
-@return 1 for valid, 0 otherwise
-*/
 int getSecondOperandData(char *field, int *operand2_method, int *operand2, int allow0, int allow1, int allow2, int allow3) {
     /* Check if immediate addressing method (0) and if it's allowed */
     if(field[0] == '#') {
@@ -267,17 +250,6 @@ int getSecondOperandData(char *field, int *operand2_method, int *operand2, int a
     return 1; /* Valid operand use */
 }
 
-/*
-Check if the operation receives the amount of operands it needs to receive.
-If it's "mov" to "lea" then it should receive 2 operands.
-If it's "clr" to "jsr" then it should receive 1 operand.
-If it's "rts" to "stop" then it should receive no operands.
-@param op_index The index of the operation from *op_names
-@param *second_field The first field capable of receiving an operand
-@param *third_field The second field capable of receiving an operand
-@param *fourth_field The third field capable of receiving and operand (Error for most cases)
-@return 1 if error found, 0 otherwise
-*/
 int validateOperandCount(int op_index, char *second_field, char *third_field, char *fourth_field) {
     if(op_index == -1) {
         fprintf(stderr, "Error: Invalid operation name\n");
@@ -312,13 +284,6 @@ int validateOperandCount(int op_index, char *second_field, char *third_field, ch
     return 0;
 }
 
-/*
-Check if a given field holds a valid register name
-@param *field The field that holds the operand
-@param start_offset How many characters to ignore at the start of the field
-@param end_offset How many characters to ignore at the end of the field
-@return 1 if register name, 0 otherwise
-*/
 int isRegisterName(char *field, int start_offset, int end_offset) {
     int i;
     char *temp_field;
@@ -343,13 +308,6 @@ int isRegisterName(char *field, int start_offset, int end_offset) {
     return 0; /* Not register name */
 }
 
-/*
-Take a validated register and return it's number
-@param *field The field that holds the operand
-@param start_offset How many characters to ignore at the start of the field
-@param end_offset How many characters to ignore at the end of the field
-@return The register's number
-*/
 int getRegisterNumber(char *field, int start_offset, int end_offset) {
     char *temp_field;
     int register_number;
@@ -366,12 +324,6 @@ int getRegisterNumber(char *field, int start_offset, int end_offset) {
     return register_number;
 }
 
-/*
-Check if an operand matches the direct addressing type, starts with # and has an integer
-after it (0, negative or positive)
-@param *operand The field that holds the operand
-@return 1 if direct addressing, 0 otherwise
-*/
 int checkDirectAddressing(char *field) {
     int i;
 
@@ -384,14 +336,6 @@ int checkDirectAddressing(char *field) {
     return 1;
 }
 
-/*
-Check if a line has a tag / symbol definition, if so check it's validity and return the
-appropriate error code
-@param *first_field The text that holds the name of the tag / symbol
-@param *file_line The entire line that was read from the file
-@param *char_index The index of the current character in the line
-@return Error code for each case
-*/
 int checkSymbolDefinition(char *first_field) {
     int i;
 
@@ -412,11 +356,6 @@ int checkSymbolDefinition(char *first_field) {
     }
 }
 
-/*
-Check if there is an instruction to hold .data or .string
-@param *data_type The data type that was read (.data or .string or something else)
-@return 1 if it's .data, 2 if it's .string, 0 otherwise
-*/
 int getDataStore(char *second_field) {
     if(!strcmp(second_field, ".data"))
         return 1;
@@ -425,34 +364,6 @@ int getDataStore(char *second_field) {
     return 0;
 }
 
-void processTokens(char *file_line, int *dc, int *dc_error, instruction *memory) {
-    char *token;
-    char binary_str[16];
-
-    token = strtok(file_line, " ");
-    token = strtok(NULL, " ");
-
-    while(token != NULL) {
-        if(*dc >= MAX_VAL_DC) {
-            fprintf(stderr, "Error: Data overflow error, DC counter exceeding 100\n");
-            *dc_error = 1;
-            break;
-        }
-        memory[(*dc)++].full = atoi(token);
-        decToBin15(memory[*dc - 1].full, binary_str);
-        printf("memory[%d] is %d in decimal and %s in binary\n", *dc - 1, memory[*dc - 1].full, binary_str);
-        token = strtok(NULL, ", ");
-    }
-}
-
-
-/*
-Check if there is an instruction for .extern or .entry
-It can be the first field or second field in the line
-@param *first_field The instruction that was read as the first field
-@param *second_field The instruction that was read as the second field
-@return 1 if it's .extern, 2 if it's .entry, 0 otherwise
-*/
 int getExternEntry(char *second_field) {
     if(!strcmp(second_field, ".extern"))
         return 1;
@@ -461,11 +372,6 @@ int getExternEntry(char *second_field) {
     return 0;
 }
 
-/*
-Get the index of the operation from the list *op_names
-@param *field The string that holds the operation name
-@return Index of operation in *op_names
-*/
 int getOperation(char *field) {
     int i;
 
@@ -476,7 +382,7 @@ int getOperation(char *field) {
     return -1;
 }
 
-void decToBin15(int num, char* binary_str) {
+void decToBin15(int num, char *binary_str) {
     int i;
 
     binary_str[15] = '\0';
