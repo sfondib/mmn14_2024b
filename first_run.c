@@ -10,7 +10,7 @@
 When first_run.c is done, convert firstRun to a regular function that accepts all the
 necessary parameters because everything goes through assembler.c and not first_run.c
 */
-int firstRun(char *file_name) {
+int firstRun(char *file_name, instruction memory[MAX_VAL_IC]) {
     FILE *sfp; /* Source file pointer */
 
     int line_index;
@@ -36,7 +36,7 @@ int firstRun(char *file_name) {
     char *token;
     char binary_str[16];
 
-    instruction memory[MAX_VAL_IC];
+    /* instruction memory[MAX_VAL_IC]; */
 
     if(!file_name) {
         fprintf(stderr, "Error: No files passed as arguments.\n");
