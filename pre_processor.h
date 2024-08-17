@@ -5,4 +5,4 @@ macros the original file had after opening them whenever called
 @param *file_name Name of the file to read
 @return 1 for failure, 0 for sucess
 */
-int pre_processing(char *file_name);
+int preProcessor(char *file_name);

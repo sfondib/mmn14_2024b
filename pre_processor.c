@@ -5,7 +5,7 @@
 #include "my_macro.h"
 #include "pre_processor_funcs.h"
 
-int pre_processing(char *file_name) {
+int preProcessor(char *file_name) {
 	FILE *asfp;
 	FILE *amfp;
 
