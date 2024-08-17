@@ -51,7 +51,7 @@ void printMacroError(int error_code, char *file_name, int line_index) {
 	fprintf(stderr, "Error: %s\nFile: %s\nLine: %d\n", error_codes[error_code], file_name, line_index);
 }
 
-void addLineToMacro(macro_dw* macro_node, char *file_line) {
+void addLineToMacro(macro_dw *macro_node, char *file_line) {
 	if(macro_node->lines == NULL) {
 		macro_node->lines = (char **)malloc(2 * sizeof(char *));
 		if(macro_node->lines == NULL) {
@@ -68,46 +68,31 @@ void addLineToMacro(macro_dw* macro_node, char *file_line) {
 	macro_node->lines[macro_node->num_lines] = NULL;
 }
 
-/*
-Allocate enough memory for reading the field in the passed line (first field or second field)
-@return Pointer to the field
-*/
 char* fieldInitialAlloc(void) {
+	/* Dynamically allocate memory for the field */
 	char *field = (char *)malloc(sizeof(char));
+
 	if(field == NULL) {
 		printf("Memory allocation failed\n");
 		exit(1);
 	}
+
 	return field;
 }
 
-/*
-Take all four fields that can make up an instruction and initialize them using the
-fieldInitialAlloc() function
-@param **first_field The first field in the instruction
-@param **second_field The second field in the instruction
-@param **third_field The third field in the instruction
-@param **fourth_field The fourth field in the instruction
-*/
 void initializeFields(char **first_field, char **second_field, char **third_field, char **fourth_field) {
+	/* Allocate memory for the fields */
 	*first_field = fieldInitialAlloc();
 	*second_field = fieldInitialAlloc();
 	*third_field = fieldInitialAlloc();
 	*fourth_field = fieldInitialAlloc();
+	/* Initialize them to be empty */
 	strcpy(*first_field, "");
 	strcpy(*second_field, "");
 	strcpy(*third_field, "");
 	strcpy(*fourth_field, "");
 }
 
-/*
-Check if the name given to the macro is valid
-@param **head Head pointer to the start of the linked-list
-@param macro_name Name of the tested macro
-@param *line Line read from the file
-@param index Character index in the line that was read
-@return Integer to represent the error code for each tested case
-*/
 int macroNameValidityCheck(macro_dw **head, char *macro_name, char *line, int index) {
 	int i = 0;
 
@@ -132,12 +117,6 @@ int macroNameValidityCheck(macro_dw **head, char *macro_name, char *line, int in
 	return 0; /* All tests passed */
 }
 
-/*
-Get the field from the line that was read (first field or second field) and after allocating the field
-@param **field The field variable to edit (first field or second field)
-@param *file_line Line read from the file
-@param *index Character index in the line that was read
-*/
 void getFieldFromLine(char **field, char *file_line, int *index) {
 	char file_character;
 	int length = 0;
@@ -150,12 +129,6 @@ void getFieldFromLine(char **field, char *file_line, int *index) {
 	}
 }
 
-/*
-Creates a new node for a macro that is being defined
-@param start_line Line number where the macro definition starts
-@param macro_name Name of the macro that is being created
-@return Pointer to the macro that was created
-*/
 macro_dw* createMacroNode(int start_line, char *macro_name) {
 	macro_dw *new_node = (macro_dw *)malloc(sizeof(macro_dw));
 
@@ -174,12 +147,6 @@ macro_dw* createMacroNode(int start_line, char *macro_name) {
 	return new_node;
 }
 
-/*
-Add the newly created macro to the linked-list
-@param **head Head pointer to the start of the linked-list
-@param start_line Line number where the macro definition starts
-@param macro_name Name of the macro that is being appended (for creation)
-*/
 void appendMacroNodeToList(macro_dw **head, int start_line, char *macro_name) {
 	macro_dw *temp = *head;
 	macro_dw *new_node = createMacroNode(start_line, macro_name);
@@ -200,12 +167,6 @@ void appendMacroNodeToList(macro_dw **head, int start_line, char *macro_name) {
 	}
 }
 
-/*
-Go through the list and find the node with the name passed as argument
-@param *head Head pointer to the start of the linked-list
-@param *macro_name Name of the macro that is looked for
-@return Pointer to the matching node
-*/
 macro_dw* findMacroNodeWithName(macro_dw *head, char *macro_name) {
 	while(head != NULL) {
 		/* Macro with that name was found, return head which points to that macro node */
@@ -218,10 +179,6 @@ macro_dw* findMacroNodeWithName(macro_dw *head, char *macro_name) {
 	return NULL; /* Macro with that name was not found */
 }
 
-/*
-Free all macros on the list and each of their fields
-@param *head Head pointer to the start of the linked-list
-*/
 void freeMacroList(macro_dw *head) {
 	macro_dw *temp;
 	int i;
