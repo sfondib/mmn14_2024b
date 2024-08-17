@@ -1,7 +1,7 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <ctype.h>
+#include<stdlib.h>
+#include<stdio.h>
+#include<string.h>
+#include<ctype.h>
 #include "pre_processor_funcs.h"
 #include "my_macro.h"
 
@@ -25,8 +25,16 @@ char *invalid_macro_names[] = {
 	"stop",
 	".data",
 	".string",
-	"entry",
-	"extern",
+	".entry",
+	".extern",
+	"r0",
+	"r1",
+	"r2",
+	"r3",
+	"r4",
+	"r5",
+	"r6",
+	"r7",
 };
 
 char *error_codes[] = {
