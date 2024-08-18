@@ -5,7 +5,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include "helpful.h"
 
 /* Pointer to table's entry */
 typedef struct item* table;
@@ -48,7 +47,7 @@ void addValueIfTypeMatch(table tab, long to_add, symbol_type type);
  * Release all memory related to the table
  * @param tbl - the table to be freed
  */
-void freeTableMemory(table tbl);
+void freeTableMemory(table *tbl);
 
 /**
  * Find an item in the table by its key and a list of valid types
