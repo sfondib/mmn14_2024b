@@ -1,7 +1,10 @@
 #include "pre_processor_funcs.h"
 #include "first_run_funcs.h"
 #include "second_run.h"
-#include "table.h"
+#include "symbol_table.h"
+#include "helpful.h"
+#include "pre_processor.h"
+
 
 /**
  * Main function for processing assembler files.
@@ -18,8 +21,10 @@
 int main(int argc, char *argv[]) {
     FILE *file;
     table symbol_table = NULL;
+    instruction memory[MAX_VAL_IC];
     char file_name_read[256];
     int file_index;
+    long dc = 0;
     bool success = TRUE;
 
     if (argc < 2) {
@@ -31,39 +36,19 @@ int main(int argc, char *argv[]) {
     for (file_index = 1; file_index < argc; file_index++) {
         /* Step 1: Pre-processing */
         sprintf(file_name_read, "%s.as", argv[file_index]);
-        file = fopen(file_name_read, "r");
-        if (!file) {
-            fprintf(stderr, "Error: Could not open file %s for reading.\n", file_name_read);
-            success = FALSE;
-            continue;
-        }
-
-        /* Perform the pre-processing step */
-        if (!processFilePreProcessor(file, file_name_read)) {
+        if (preProcessor(file_name_read)) {
             fprintf(stderr, "Error: Pre-processing failed for file %s.\n", file_name_read);
             success = FALSE;
-            fclose(file);
             continue;
         }
-        fclose(file);
 
         /* Step 2: First pass */
         sprintf(file_name_read, "%s.am", argv[file_index]);
-        file = fopen(file_name_read, "r");
-        if (!file) {
-            fprintf(stderr, "Error: Could not open file %s for first pass.\n", file_name_read);
-            success = FALSE;
-            continue;
-        }
-
-        /* Perform the first pass */
-        if (!firstRun(file, &symbol_table, file_name_read)) {
+        if (firstRun(file_name_read, memory)) {
             fprintf(stderr, "Error: First pass failed for file %s.\n", file_name_read);
             success = FALSE;
-            fclose(file);
             continue;
         }
-        fclose(file);
 
         /* Step 3: Second pass */
         file = fopen(file_name_read, "r");
@@ -73,18 +58,15 @@ int main(int argc, char *argv[]) {
             continue;
         }
 
-        /* Perform the second pass */
-        if (!processFileSecondPass(file, file_name_read, &symbol_table)) {
+        if (!processFileSecondPass(file, file_name_read, &symbol_table, memory, dc)) {
             fprintf(stderr, "Error: Second pass failed for file %s.\n", file_name_read);
             success = FALSE;
-            fclose(file);
-            continue;
         }
+
         fclose(file);
 
         /* Free symbol table for the next file */
-        freeTableMemory(symbol_table);
-        symbol_table = NULL;
+        freeTableMemory(&symbol_table);
     }
 
     if (!success) {
@@ -92,6 +74,6 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    printf("All files processed successfully.\n");
+    printf("All files processed successfully! Thanks for your time and good luck!\n");
     return 0;
 }
