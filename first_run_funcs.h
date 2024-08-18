@@ -1,3 +1,6 @@
+#ifndef FIRST_RUN_FUNCS_H
+#define FIRST_RUN_FUNCS_H
+
 #ifndef NULL
 #define NULL ((void*)0)
 #endif
@@ -57,7 +60,7 @@ typedef union {
 
 /*
 After the pre-processing phase is complete go through each line and
-analyze it's structure for building the data words and building
+analyze its structure for building the data words and building
 the symbol table
 @param *file_name Name of the file to go through
 @return 1 for failure, 0 for success
@@ -72,7 +75,7 @@ Reset the values of the variables passed as arguments
 void resetVars(int count, ...);
 
 /*
-Convert a decimal number to it's binary representation 15-bits
+Convert a decimal number to its binary representation in 15 bits
 @param num The decimal number to convert
 @param *binary_str String to hold the binary representation string
 */
@@ -118,7 +121,7 @@ Get the data from the first operand (The addressing method and value)
 int getSecondOperandData(char *field, int *operand2_method, int *operand2, int allow0, int allow1, int allow2, int allow3);
 
 /*
-Check if a line has a tag / symbol definition, if so check it's validity and return the
+Check if a line has a tag / symbol definition, if so check its validity and return the
 appropriate error code
 @param *first_field The text that holds the name of the tag / symbol
 @param *file_line The entire line that was read from the file
@@ -129,7 +132,7 @@ int checkSymbolDefinition(char *first_field);
 
 /*
 Check if there is an instruction to hold .data or .string
-@param *data_type The data type that was read (.data or .string or something else)
+@param *second_field The data type that was read (.data or .string or something else)
 @return 1 if it's .data, 2 if it's .string, 0 otherwise
 */
 int getDataStore(char *second_field);
@@ -166,7 +169,7 @@ If it's "rts" to "stop" then it should receive no operands.
 @param op_index The index of the operation from *op_names
 @param *second_field The first field capable of receiving an operand
 @param *third_field The second field capable of receiving an operand
-@param *fourth_field The third field capable of receiving and operand (Error for most cases)
+@param *fourth_field The third field capable of receiving an operand (Error for most cases)
 @return 1 if error found, 0 otherwise
 */
 int validateOperandCount(int op_index, char *second_field, char *third_field, char *fourth_field);
@@ -181,10 +184,12 @@ Check if a given field holds a valid register name
 int isRegisterName(char *field, int start_offset, int end_offset);
 
 /*
-Take a validated register and return it's number
+Take a validated register and return its number
 @param *field The field that holds the operand
 @param start_offset How many characters to ignore at the start of the field
 @param end_offset How many characters to ignore at the end of the field
 @return The register's number
 */
 int getRegisterNumber(char *field, int start_offset, int end_offset);
+
+#endif /* FIRST_RUN_FUNCS_H */
