@@ -189,11 +189,18 @@ bool createObjectFile(const char *file_name, instruction *memory, long ic, long 
     char ob_file_name[MAX_FILE_NAME_LEN];
     FILE *ob_file;
     int i;
-    char binary_str[16];  /* String to store binary conversion */
-    long address;  /* כדי לוודא שהכתובת נשמרת כסוג long */
+    long address;
+    char *dot_position;
 
-    /* Create the .ob file name by adding the extension */
-    sprintf(ob_file_name, "%s.ob", file_name);
+    strncpy(ob_file_name, file_name, MAX_FILE_NAME_LEN);
+
+    /* Find the last occurrence of '.' to remove the extension */
+    dot_position = strrchr(ob_file_name, '.');
+    if (dot_position != NULL) {
+        *dot_position = '\0';  /* Remove the extension */
+    }
+
+    strcat(ob_file_name, ".ob");
 
     /* Open the .ob file for writing */
     ob_file = fopen(ob_file_name, "w");
@@ -203,26 +210,22 @@ bool createObjectFile(const char *file_name, instruction *memory, long ic, long 
     }
 
     /* Write the instruction count and data count at the top */
-    fprintf(ob_file, "%ld %ld", ic - IC_START_VALUE, dc);
+    fprintf(ob_file, "%ld %ld\n", ic - IC_START_VALUE, dc);
 
     /* Iterate over the instruction memory and write the encoded instructions to the file */
     for (i = 0; i < ic - IC_START_VALUE; i++) {
-        /* Convert the full field to a binary string */
-        decToBin15(memory[i].full, binary_str);
         address = IC_START_VALUE + i;
-        fprintf(ob_file, "%.4ld %.5o\n", address, (unsigned)memory[i].full);
+        /* Print address in decimal (with leading zeros) and content in octal and limit to 15 bits*/
+        fprintf(ob_file, "%04ld %05o\n", address, (unsigned)(memory[i].full & 0x7FFF));
     }
 
     /* Write the data image */
     for (i = 0; i < dc; i++) {
-        /* Convert the full field to a binary string */
-        decToBin15(memory[ic + i].full, binary_str);
         address = IC_START_VALUE + ic + i;
-        /* Write the binary string to the file */
-        fprintf(ob_file, "%.4ld %.5o\n", address, (unsigned)memory[ic + i].full);
+        /* Print address in decimal (with leading zeros) and content in octal */
+        fprintf(ob_file, "%04ld %05o\n", address, (unsigned)(memory[ic + i].full & 0x7FFF));
     }
 
-    /* Close the file */
     fclose(ob_file);
     return TRUE;
 }
