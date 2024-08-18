@@ -7,6 +7,10 @@
 /* Maximum size of code image */
 #define CODE_IMG_MAX_LENGTH 1200
 
+/* Maximum length of a file name */
+#define MAX_FILE_NAME_LEN 256
+
+/* Values for first and second runs */
 #define NUM_OPS     16
 #define MAX_VAL_15  16383   /* -2¹⁴ - 1 */
 #define MIN_VAL_15  -16384  /* -2¹⁴ */
