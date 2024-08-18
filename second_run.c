@@ -100,9 +100,11 @@ bool lineIndexPass(line_info line, long *ic, table *symbol_table) {
  * @param file - Pointer to the source file to process.
  * @param file_name - The name of the source file.
  * @param symbol_table - Pointer to the symbol table.
+ * @param memory - Pointer to the instruction memory.
+ * @param dc - The data counter value.
  * @return TRUE if processing is successful, FALSE if errors occurred.
  */
-bool processFileSecondPass(FILE *file, const char *file_name, table *symbol_table) {
+bool processFileSecondPass(FILE *file, const char *file_name, table *symbol_table, instruction *memory, long dc) {
     char line_content[MAX_LINE_LEN];
     long ic = IC_START_VALUE;  /* Initialize IC once at the beginning of processing */
     line_info current_line;
@@ -126,8 +128,12 @@ bool processFileSecondPass(FILE *file, const char *file_name, table *symbol_tabl
     }
 
     /* Step 9: If the entire source file is read */
-    if (!success) {
-        /* Errors were found during the second pass */
+    if (success) {
+        if (!createObjectFile(file_name, memory, ic, dc)) {
+            fprintf(stderr, "Error: Failed to create the object file.\n");
+            return FALSE;
+        }
+    } else {
         fprintf(stderr, "Errors were found during the second pass. Stopping.\n");
         return FALSE;
     }
@@ -168,5 +174,55 @@ bool encodeOperands(line_info line, long *ic, table *symbol_table, int *operand1
     
     /* Encoding logic based on operand methods and updating the instruction counter */
     
+    return TRUE;
+}
+
+/**
+ * Creates the .ob file by writing the encoded instructions and data to it.
+ * @param file_name - The base name of the source file.
+ * @param memory - The memory structure holding the encoded instructions.
+ * @param ic - The final instruction counter value.
+ * @param dc - The final data counter value.
+ * @return TRUE if the file is created successfully, FALSE if an error occurs.
+ */
+bool createObjectFile(const char *file_name, instruction *memory, long ic, long dc) {
+    char ob_file_name[MAX_FILE_NAME_LEN];
+    FILE *ob_file;
+    int i;
+    char binary_str[16];  /* String to store binary conversion */
+    long address;  /* כדי לוודא שהכתובת נשמרת כסוג long */
+
+    /* Create the .ob file name by adding the extension */
+    sprintf(ob_file_name, "%s.ob", file_name);
+
+    /* Open the .ob file for writing */
+    ob_file = fopen(ob_file_name, "w");
+    if (ob_file == NULL) {
+        fprintf(stderr, "Error: Cannot open file %s for writing.\n", ob_file_name);
+        return FALSE;
+    }
+
+    /* Write the instruction count and data count at the top */
+    fprintf(ob_file, "%ld %ld", ic - IC_START_VALUE, dc);
+
+    /* Iterate over the instruction memory and write the encoded instructions to the file */
+    for (i = 0; i < ic - IC_START_VALUE; i++) {
+        /* Convert the full field to a binary string */
+        decToBin15(memory[i].full, binary_str);
+        address = IC_START_VALUE + i;
+        fprintf(ob_file, "%.4ld %.5o\n", address, (unsigned)memory[i].full);
+    }
+
+    /* Write the data image */
+    for (i = 0; i < dc; i++) {
+        /* Convert the full field to a binary string */
+        decToBin15(memory[ic + i].full, binary_str);
+        address = IC_START_VALUE + ic + i;
+        /* Write the binary string to the file */
+        fprintf(ob_file, "%.4ld %.5o\n", address, (unsigned)memory[ic + i].full);
+    }
+
+    /* Close the file */
+    fclose(ob_file);
     return TRUE;
 }
