@@ -34,14 +34,15 @@ void addItemToTable(table *tbl, long value, char *item, symbol_type type) {
     prev_item->next = new_item;
 }
 
-void freeTableMemory(table tbl) {
-    table prev_item, curr_item = tbl;
+void freeTableMemory(table *tbl) {
+    table prev_item, curr_item = *tbl;
     while (curr_item != NULL) {
         prev_item = curr_item;
         curr_item = curr_item->next;
         free(prev_item->key);
         free(prev_item);
     }
+    *tbl = NULL;  /* Make sure the table pointer is set to NULL after freeing */
 }
 
 void addValueIfTypeMatch(table tbl, long to_add, symbol_type type) {
